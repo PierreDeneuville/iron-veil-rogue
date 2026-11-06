@@ -1,0 +1,3473 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IRON VEIL</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Cinzel:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg:       #0a0c0f;
+    --panel:    #111418;
+    --border:   #1e2530;
+    --border2:  #2a3340;
+    --ink:      #c8d4e0;
+    --ink-dim:  #7c8c9c;
+    --ink-faint:#4a5866;
+    --gold:     #c8a84b;
+    --gold-dim: #7a6020;
+    --red:      #c84040;
+    --red-dim:  #5a1818;
+    --green:    #4ac870;
+    --green-dim:#1a4828;
+    --blue:     #4a90c8;
+    --blue-dim: #182840;
+    --purple:   #9a60c8;
+    --purple-dim:#2a1840;
+    --orange:   #c87040;
+    --common:    #8aa0b0;
+    --uncommon:  #4ac870;
+    --rare:      #4a90c8;
+    --epic:      #9a60c8;
+    --legendary: #c8a84b;
+    --font-display: 'Cinzel', serif;
+    --font-ui:      'Rajdhani', sans-serif;
+    --font-mono:    'Share Tech Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 15px; line-height: 1.4; min-height: 100vh; overflow-x: hidden; }
+
+  .screen { display: none; width: 100%; min-height: 100vh; }
+  .screen.active { display: flex; }
+
+  /* TITLE */
+  #screen-title { flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(ellipse at 50% 30%, #0d1520 0%, #0a0c0f 70%); position: relative; overflow: hidden; }
+  #screen-title::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 39px, #0f151c 39px, #0f151c 40px), repeating-linear-gradient(90deg, transparent, transparent 39px, #0f151c 39px, #0f151c 40px); opacity: 0.4; }
+  .title-canvas-wrap { position: relative; z-index: 1; margin-bottom: 20px; }
+  #titleCanvas { display: block; }
+  .title-sub { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.3em; color: var(--ink-dim); text-transform: uppercase; margin-bottom: 32px; position: relative; z-index: 1; }
+  .title-btns { display: flex; gap: 12px; position: relative; z-index: 1; }
+  .btn-primary { font-family: var(--font-display); font-size: 13px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--bg); background: var(--gold); border: none; padding: 14px 40px; cursor: pointer; clip-path: polygon(8px 0%, calc(100% - 8px) 0%, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0% calc(100% - 8px), 0% 8px); transition: background 0.15s, transform 0.1s; }
+  .btn-primary:hover { background: #e0c060; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary { font-family: var(--font-display); font-size: 13px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-dim); background: transparent; border: 1px solid var(--border2); padding: 14px 32px; cursor: pointer; clip-path: polygon(8px 0%, calc(100% - 8px) 0%, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0% calc(100% - 8px), 0% 8px); transition: color 0.15s, border-color 0.15s; }
+  .btn-secondary:hover { color: var(--ink); border-color: var(--ink-dim); }
+
+  /* GAME LAYOUT */
+  #screen-game { flex-direction: column; height: 100vh; overflow: hidden; }
+  .game-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; border-bottom: 1px solid var(--border); background: var(--panel); flex-shrink: 0; height: 44px; }
+  .game-title-small { font-family: var(--font-display); font-size: 14px; letter-spacing: 0.15em; color: var(--gold); }
+  .floor-indicator { font-family: var(--font-mono); font-size: 12px; color: var(--ink-dim); letter-spacing: 0.1em; }
+  .floor-num { color: var(--ink); font-size: 16px; }
+  .game-body { display: grid; grid-template-columns: 240px 1fr 280px; flex: 1; overflow: hidden; }
+
+  /* PANELS */
+  .panel { background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+  .panel:last-child { border-right: none; border-left: 1px solid var(--border); }
+  .panel-title { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--ink-dim); padding: 10px 14px 8px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .panel-body { flex: 1; overflow-y: auto; padding: 12px; }
+  .panel-body::-webkit-scrollbar { width: 4px; }
+  .panel-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  #playerCanvas { display: block; margin: 8px auto; }
+  .stat-block { margin-bottom: 14px; }
+  .stat-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .stat-label { font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); letter-spacing: 0.1em; }
+  .stat-value { font-family: var(--font-mono); font-size: 13px; color: var(--ink); }
+  .hp-bar-wrap { background: var(--red-dim); height: 6px; border-radius: 1px; overflow: hidden; }
+  .hp-bar { background: var(--red); height: 100%; transition: width 0.3s; }
+  .section-divider { height: 1px; background: var(--border); margin: 10px 0; }
+
+  /* EQUIP GRID */
+  .equip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
+  .equip-slot { background: var(--bg); border: 1px solid var(--border); border-radius: 2px; padding: 6px 8px; cursor: pointer; transition: border-color 0.15s; min-height: 58px; position: relative; }
+  .equip-slot:hover { border-color: var(--border2); }
+  .equip-slot.has-item { border-color: var(--border2); }
+  .equip-slot-label { font-family: var(--font-mono); font-size: 10px; color: #8a96a4; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px; }
+  .equip-slot-name { font-family: var(--font-ui); font-size: 12px; font-weight: 600; line-height: 1.2; }
+  .equip-dur-bar { position: absolute; bottom: 3px; left: 6px; right: 6px; height: 2px; background: var(--border); border-radius: 1px; overflow: hidden; }
+  .equip-dur-fill { height: 100%; border-radius: 1px; transition: width 0.3s, background 0.3s; }
+  .equip-slot.full-width { grid-column: 1 / -1; }
+
+  /* COMBAT */
+  .combat-area { background: #0c0f14; display: flex; flex-direction: column; overflow: hidden; }
+  .combat-stage { flex-shrink: 0; position: relative; height: 260px; overflow: hidden; }
+  #combatCanvas { display: block; width: 100%; height: 100%; }
+  .combat-ui { padding: 10px 16px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .enemy-name-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .enemy-name { font-family: var(--font-display); font-size: 15px; letter-spacing: 0.05em; }
+  .enemy-type-badge { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.15em; padding: 2px 8px; border: 1px solid; text-transform: uppercase; }
+  .enemy-hp-wrap { background: var(--red-dim); height: 8px; border-radius: 1px; overflow: hidden; }
+  .enemy-hp-bar { background: var(--red); height: 100%; transition: width 0.3s; }
+  .matchup-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .matchup-badge { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; padding: 2px 6px; border: 1px solid; }
+
+  /* COMBAT LOG */
+  .combat-log { flex: 1; overflow-y: auto; padding: 10px 16px; font-family: var(--font-mono); font-size: 12px; line-height: 1.6; }
+  .combat-log::-webkit-scrollbar { width: 4px; }
+  .combat-log::-webkit-scrollbar-thumb { background: var(--border2); }
+  .log-entry { margin-bottom: 2px; }
+  .log-entry.player { color: var(--blue); }
+  .log-entry.enemy  { color: var(--red); }
+  .log-entry.system { color: var(--gold); }
+  .log-entry.loot   { color: var(--green); }
+  .log-entry.warn   { color: var(--orange); }
+  .log-entry.crit   { color: #ff6060; font-weight: bold; }
+  .log-entry.sell   { color: #c8a84b; }
+
+  /* ACTIONS */
+  .combat-actions { display: flex; gap: 6px; padding: 10px 16px; border-top: 1px solid var(--border); flex-shrink: 0; }
+  .btn-action { flex: 1; font-family: var(--font-ui); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); background: var(--bg); border: 1px solid var(--border2); padding: 10px 8px; cursor: pointer; transition: background 0.12s, border-color 0.12s, color 0.12s; clip-path: polygon(4px 0%, calc(100% - 4px) 0%, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0% calc(100% - 4px), 0% 4px); }
+  .btn-action:hover:not(:disabled) { background: var(--border2); border-color: var(--ink-dim); color: #fff; }
+  .btn-action:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-action.attack { border-color: #c84040; }
+  .btn-action.attack:hover:not(:disabled) { background: #2a0808; border-color: var(--red); }
+
+  /* RIGHT PANEL TABS */
+  .tab-bar { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .tab-btn { flex: 1; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); background: none; border: none; padding: 10px 4px; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; }
+  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .tab-content { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+  .tab-content.active { display: flex; }
+
+  /* ITEM CARDS */
+  .item-card { background: var(--bg); border: 1px solid var(--border); padding: 8px 10px; margin-bottom: 6px; cursor: pointer; transition: border-color 0.12s; position: relative; }
+  .item-card:hover { border-color: var(--border2); }
+  .item-card.selected { border-color: var(--gold); }
+  .item-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+  .item-name { font-family: var(--font-ui); font-size: 13px; font-weight: 600; line-height: 1.2; }
+  .item-slot-tag { font-family: var(--font-mono); font-size: 10px; color: var(--ink-dim); letter-spacing: 0.1em; text-transform: uppercase; flex-shrink: 0; margin-left: 6px; }
+  .item-stats { font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); margin-bottom: 4px; }
+  .item-attrs { display: flex; flex-wrap: wrap; gap: 3px; }
+  .attr-tag { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.05em; padding: 1px 5px; border: 1px solid; border-radius: 1px; text-transform: uppercase; }
+  .item-dur-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+  .item-dur-label { font-family: var(--font-mono); font-size: 10px; color: var(--ink-dim); }
+  .item-dur-bar-wrap { flex: 1; background: var(--border); height: 3px; border-radius: 1px; overflow: hidden; }
+  .item-dur-bar { height: 100%; border-radius: 1px; }
+  .item-dur-num { font-family: var(--font-mono); font-size: 9px; color: var(--ink-dim); }
+  .equip-btn { width: 100%; font-family: var(--font-ui); font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--bg); background: var(--gold); border: none; padding: 7px; cursor: pointer; clip-path: polygon(4px 0%, calc(100% - 4px) 0%, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0% calc(100% - 4px), 0% 4px); }
+  .equip-btn:hover { background: #e0c060; }
+
+  /* LOOT OVERLAY */
+  #loot-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; }
+  #loot-overlay.active { display: flex; }
+  .loot-box { background: var(--panel); border: 1px solid var(--border2); width: 640px; max-width: 95vw; max-height: 85vh; overflow-y: auto; padding: 24px; clip-path: polygon(12px 0%, calc(100% - 12px) 0%, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0% calc(100% - 12px), 0% 12px); }
+  .loot-title { font-family: var(--font-display); font-size: 18px; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 6px; text-align: center; }
+  .loot-subtitle { font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); text-align: center; letter-spacing: 0.2em; margin-bottom: 20px; }
+  .loot-items { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .loot-item-card { background: var(--bg); border: 1px solid var(--border); padding: 10px 12px; cursor: pointer; transition: border-color 0.12s; }
+  .loot-item-card:hover { border-color: var(--gold-dim); }
+  .loot-item-card.selected { border-color: var(--gold); }
+  .loot-actions { display: flex; gap: 8px; margin-bottom: 8px; }
+  .next-floor-btn { width: 100%; font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--bg); background: var(--green); border: none; padding: 11px; cursor: pointer; margin-top: 8px; clip-path: polygon(4px 0%, calc(100% - 4px) 0%, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0% calc(100% - 4px), 0% 4px); transition: background 0.15s; }
+  .next-floor-btn:hover { background: #60e080; }
+
+  /* SMITH OVERLAY */
+  #smith-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 100; align-items: center; justify-content: center; }
+  #smith-overlay.active { display: flex; }
+  .smith-box { background: var(--panel); border: 1px solid var(--border2); width: 660px; max-width: 95vw; max-height: 88vh; overflow-y: auto; padding: 24px; clip-path: polygon(12px 0%, calc(100% - 12px) 0%, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0% calc(100% - 12px), 0% 12px); }
+  .smith-title { font-family: var(--font-display); font-size: 16px; color: var(--orange); letter-spacing: 0.1em; margin-bottom: 4px; }
+  .smith-sub { font-family: var(--font-mono); font-size: 10px; color: var(--ink-dim); letter-spacing: 0.15em; margin-bottom: 16px; }
+  .smith-shards { font-family: var(--font-mono); font-size: 13px; color: var(--gold); margin-bottom: 14px; }
+  .smith-section-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--ink-dim); border-top: 1px solid var(--border); padding-top: 10px; margin: 10px 0 8px; }
+  .smith-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+  .smith-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border: 1px solid var(--border); padding: 8px 10px; gap: 8px; }
+  .smith-row-info { flex: 1; min-width: 0; }
+  .smith-row-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .smith-row-sub { font-family: var(--font-mono); font-size: 10px; color: var(--ink-dim); }
+  .smith-row-cost { font-family: var(--font-mono); font-size: 12px; color: var(--gold); margin: 0 8px; white-space: nowrap; }
+  .smith-row-cost.sell-val { color: var(--green); }
+  .btn-smith-action { font-family: var(--font-ui); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--bg); background: var(--orange); border: none; padding: 5px 10px; cursor: pointer; white-space: nowrap; transition: background 0.12s; }
+  .btn-smith-action:hover { background: #e08050; }
+  .btn-smith-action:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-smith-sell { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-dim); }
+  .btn-smith-sell:hover { background: #2a5838; }
+
+  /* LEADERBOARD OVERLAY */
+  #lb-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 200; align-items: center; justify-content: center; }
+  #lb-overlay.active { display: flex; }
+  .lb-box { background: var(--panel); border: 1px solid var(--border2); width: 680px; max-width: 96vw; max-height: 88vh; display: flex; flex-direction: column; clip-path: polygon(14px 0%, calc(100% - 14px) 0%, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0% calc(100% - 14px), 0% 14px); }
+  .lb-header { padding: 22px 28px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .lb-title { font-family: var(--font-display); font-size: 20px; letter-spacing: 0.12em; color: var(--gold); margin-bottom: 4px; }
+  .lb-desc { font-family: var(--font-mono); font-size: 10px; color: var(--ink-dim); letter-spacing: 0.2em; }
+  .lb-body { flex: 1; overflow-y: auto; padding: 16px 28px; }
+  .lb-body::-webkit-scrollbar { width: 4px; }
+  .lb-body::-webkit-scrollbar-thumb { background: var(--border2); }
+  .lb-empty { font-family: var(--font-mono); font-size: 12px; color: var(--ink-dim); text-align: center; padding: 32px 0; }
+  .lb-entry { border: 1px solid var(--border); margin-bottom: 8px; overflow: hidden; }
+  .lb-entry.rank-1 { border-color: var(--legendary); }
+  .lb-entry.rank-2 { border-color: #9aa8b0; }
+  .lb-entry.rank-3 { border-color: #a07840; }
+  .lb-entry-top { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg); cursor: pointer; user-select: none; }
+  .lb-rank { font-family: var(--font-display); font-size: 18px; font-weight: 900; width: 28px; flex-shrink: 0; text-align: center; }
+  .rank-1 .lb-rank { color: var(--legendary); }
+  .rank-2 .lb-rank { color: #b0bccc; }
+  .rank-3 .lb-rank { color: #c09050; }
+  .lb-rank-other { color: var(--ink-dim); font-size: 14px; }
+  .lb-entry-main { flex: 1; min-width: 0; }
+  .lb-run-title { font-family: var(--font-ui); font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .lb-run-meta { font-family: var(--font-mono); font-size: 10px; color: var(--ink-dim); letter-spacing: 0.08em; }
+  .lb-score { font-family: var(--font-mono); font-size: 13px; color: var(--gold); font-weight: bold; white-space: nowrap; }
+  .lb-entry-detail { display: none; padding: 10px 14px 12px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.3); }
+  .lb-entry.expanded .lb-entry-detail { display: block; }
+  .lb-detail-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 8px; }
+  .lb-equip-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .lb-item-chip { font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border: 1px solid; background: var(--bg); }
+  .lb-footer { padding: 14px 28px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; }
+
+  /* GAMEOVER / VICTORY */
+  #screen-gameover { flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(ellipse at 50% 50%, #1a0808 0%, var(--bg) 70%); }
+  #screen-victory   { flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(ellipse at 50% 50%, #181408 0%, var(--bg) 70%); }
+  .end-title { font-family: var(--font-display); font-size: 42px; font-weight: 900; letter-spacing: 0.15em; margin-bottom: 12px; }
+  .end-title.defeat { color: var(--red); }
+  .end-title.victory { color: var(--gold); }
+  .end-sub { font-family: var(--font-mono); font-size: 12px; color: var(--ink-dim); letter-spacing: 0.2em; margin-bottom: 28px; text-align: center; }
+  .end-stats { font-family: var(--font-mono); font-size: 13px; color: var(--ink-dim); text-align: center; margin-bottom: 28px; line-height: 2; }
+  .end-stats span { color: var(--ink); }
+  .end-btns { display: flex; gap: 12px; }
+
+  /* STATUS / MISC */
+  .shards-display { font-family: var(--font-mono); font-size: 12px; color: var(--gold); letter-spacing: 0.1em; }
+  .status-effects { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; min-height: 18px; }
+  .status-tag { font-family: var(--font-mono); font-size: 10px; padding: 1px 5px; border: 1px solid; letter-spacing: 0.08em; text-transform: uppercase; }
+  .status-poison { color: #a0c84a; border-color: #4a6020; }
+  .status-burn   { color: #c87040; border-color: #6a3010; }
+  .status-stun   { color: #c8c040; border-color: #6a6010; }
+  .status-bleed  { color: #c84060; border-color: #6a1028; }
+  .status-regen  { color: var(--green); border-color: var(--green-dim); }
+  .empty-slot-text { font-family: var(--font-mono); font-size: 10px; color: var(--ink-faint); letter-spacing: 0.1em; }
+  .r-common    { color: var(--common); }
+  .r-uncommon  { color: var(--uncommon); }
+  .r-rare      { color: var(--rare); }
+  .r-epic      { color: var(--epic); }
+  .r-legendary { color: var(--legendary); }
+
+  /* TOOLTIP */
+  #tooltip { display: none; position: fixed; z-index: 300; background: var(--panel); border: 1px solid var(--border2); padding: 10px 12px; max-width: 240px; pointer-events: none; font-family: var(--font-mono); font-size: 11px; line-height: 1.6; }
+  .tt-name { font-family: var(--font-display); font-size: 13px; margin-bottom: 4px; }
+  .tt-stat { color: var(--ink-dim); }
+  .tt-stat span { color: var(--ink); }
+  .tt-warn { color: var(--orange); margin-top: 4px; font-size: 10px; }
+  .tt-destroy { color: var(--red); margin-top: 4px; font-size: 10px; border-top: 1px solid var(--red-dim); padding-top: 4px; }
+
+  canvas { image-rendering: pixelated; }
+
+  /* ═══ V2 ═══ RELIC OVERLAY */
+  #relic-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 150; align-items: center; justify-content: center; }
+  #relic-overlay.active { display: flex; }
+  .relic-card { background: var(--bg); border: 1px solid var(--border2); padding: 12px 14px; cursor: pointer; transition: border-color 0.12s, transform 0.1s; }
+  .relic-card:hover { border-color: var(--gold); transform: translateY(-1px); }
+  .relic-name { font-family: var(--font-display); font-size: 14px; color: var(--gold); letter-spacing: 0.06em; margin-bottom: 6px; }
+  .relic-good { font-family: var(--font-mono); font-size: 11px; color: var(--green); margin-bottom: 2px; }
+  .relic-bad  { font-family: var(--font-mono); font-size: 11px; color: var(--orange); margin-bottom: 6px; }
+
+  /* ═══ V2 ═══ BUILD CHIPS */
+  .build-chip { font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.1em; padding: 1px 5px; border: 1px solid; border-radius: 1px; text-transform: uppercase; display: inline-block; }
+  .item-chips { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }
+  .dur-profile { font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.12em; padding: 1px 5px; border: 1px solid var(--border2); color: var(--ink-dim); text-transform: uppercase; }
+
+  /* ═══ V2 ═══ RUN / BUILD PANEL */
+  .run-line { font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); margin-bottom: 4px; line-height: 1.5; }
+  .run-line span { color: var(--ink); }
+  .run-relic-name { color: var(--gold); cursor: help; }
+  .carryover-tag { color: var(--green); }
+  .faction-display { font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); letter-spacing: 0.08em; }
+
+  /* ═══ V2 ═══ FORGE TABS */
+  .smith-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+  .smith-tab { flex: 1; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dim); background: none; border: none; padding: 8px 2px; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.15s, border-color 0.15s; }
+  .smith-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+  .smith-note { font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); margin-bottom: 8px; line-height: 1.5; }
+  .btn-smith-danger { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+  .btn-smith-danger:hover { background: #7a2020; color: #fff; }
+  .essence-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border: 1px solid var(--border); padding: 7px 10px; gap: 8px; cursor: pointer; transition: border-color 0.12s; }
+  .essence-row:hover { border-color: var(--border2); }
+  .essence-row.selected { border-color: var(--gold); }
+  .smith-preview { font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); }
+  .smith-preview b { color: var(--green); font-weight: normal; }
+
+  /* ═══ V2.1 ═══ LOOT JUICE */
+  @keyframes lootIn { from { opacity:0; transform: translateY(14px) scale(0.96); } to { opacity:1; transform:none; } }
+  @keyframes lootTaken { to { opacity:0; transform: translateX(60px) scale(0.9); } }
+  @keyframes shardPulse { 0%{transform:scale(0.6);opacity:0;} 40%{transform:scale(1.15);opacity:1;} 100%{transform:scale(1);opacity:1;} }
+  .loot-item-card { animation: lootIn 0.28s ease both; position: relative; }
+  .loot-item-card:nth-child(2){animation-delay:0.07s;} .loot-item-card:nth-child(3){animation-delay:0.14s;} .loot-item-card:nth-child(4){animation-delay:0.21s;}
+  .loot-item-card:hover { border-color: var(--gold); box-shadow: 0 0 14px rgba(200,168,75,0.18), inset 0 0 20px rgba(200,168,75,0.04); }
+  .loot-item-card.taken { animation: lootTaken 0.25s ease forwards; pointer-events: none; }
+  .loot-shards-gain { font-family: var(--font-display); font-size: 22px; letter-spacing: 0.08em; color: var(--gold); text-align:center; margin: 2px 0 4px; animation: shardPulse 0.5s ease both; text-shadow: 0 0 18px rgba(200,168,75,0.4); }
+  .loot-shards-gain .diamond { font-size:16px; vertical-align: 2px; }
+
+  /* ═══ V2.1 ═══ FORGE CARDS */
+  .smith-card { display:flex; align-items:stretch; justify-content:space-between; gap:12px; background: var(--bg); border:1px solid var(--border); padding:10px 12px; margin-bottom:8px; }
+  .smith-card:hover { border-color: var(--border2); }
+  .smith-card-main { flex:1; min-width:0; }
+  .smith-card-name { font-family: var(--font-ui); font-size: 13px; font-weight:600; margin-bottom:2px; }
+  .smith-card-sub { font-family: var(--font-mono); font-size: 10px; color: var(--ink-dim); margin-bottom:4px; }
+  .smith-card-stats { font-family: var(--font-mono); font-size: 11px; color: var(--ink); margin-bottom:4px; }
+  .smith-card-attrs { display:flex; flex-wrap:wrap; gap:3px; margin-bottom:4px; }
+  .smith-card-action { display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:5px; flex-shrink:0; }
+  .smith-cost { font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); white-space:nowrap; }
+  .smith-cost b { color: var(--green); font-weight:normal; }
+  .equipped-badge { font-family: var(--font-mono); font-size: 9px; letter-spacing:0.1em; color: var(--orange); border:1px solid var(--orange); padding:0 4px; text-transform:uppercase; margin-left:6px; vertical-align:1px; }
+  .smith-dur-mini { display:flex; align-items:center; gap:6px; }
+  .smith-dur-mini .bar { width:90px; height:3px; background: var(--border); }
+  .smith-dur-mini .fill { height:100%; }
+  .smith-dur-mini span { font-family: var(--font-mono); font-size:10px; color: var(--ink-dim); }
+
+  /* ═══ V2.1 ═══ BUILD HELP */
+  .build-help-btn { font-family: var(--font-mono); font-size: 10px; color: var(--ink-dim); background:none; border:1px solid var(--border2); width:16px; height:16px; line-height:14px; text-align:center; cursor:pointer; padding:0; margin-left:6px; border-radius:50%; transition: color 0.15s, border-color 0.15s; }
+  .build-help-btn:hover { color: var(--gold); border-color: var(--gold-dim); }
+  #build-overlay { display:none; position:fixed; inset:0; background: rgba(0,0,0,0.75); z-index:110; align-items:center; justify-content:center; }
+  #build-overlay.active { display:flex; }
+  .build-tag-row { display:flex; align-items:baseline; gap:10px; margin-bottom:9px; }
+  .build-tag-row .build-chip { flex-shrink:0; min-width:74px; text-align:center; }
+  .build-tag-desc { font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); line-height:1.5; }
+  .build-expl { font-family: var(--font-mono); font-size: 11px; color: var(--ink); line-height:1.7; margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:12px; }
+
+  /* ═══ V2.1b ═══ FORGE FIX */
+  .smith-item-info { font-family: var(--font-mono); font-size: 10px; color: var(--ink-dim); }
+
+  /* ═══ V2.1b ═══ RUN BRIEF (relic overlay) */
+  .run-brief { background: var(--bg); border: 1px solid var(--border2); padding: 12px 14px; margin-bottom: 16px; }
+  .run-brief-title { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 8px; }
+  .run-brief-row { font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); margin-bottom: 5px; line-height: 1.6; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; }
+  .run-brief-row .rb-label { color: var(--ink-faint); min-width: 118px; letter-spacing:0.06em; text-transform:uppercase; font-size:10px; }
+  .run-brief-row .rb-val { color: var(--ink); }
+
+  /* ═══ V2.1b ═══ LOOT COMPARE */
+  .loot-compare { border-top: 1px dashed var(--border2); margin-top: 7px; padding-top: 6px; font-family: var(--font-mono); font-size: 10px; line-height: 1.7; }
+  .loot-compare .lc-title { color: var(--ink-faint); letter-spacing: 0.15em; text-transform: uppercase; font-size: 9px; margin-bottom: 2px; }
+  .lc-up { color: var(--green); }
+  .lc-down { color: var(--red); }
+  .lc-neutral { color: var(--ink-dim); }
+  .lc-note { color: var(--gold); }
+
+  /* ═══ V2.1b ═══ BUILD METER */
+  .bm-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 5px; }
+  .bm-tier { font-family: var(--font-mono); font-size: 10px; color: var(--ink-dim); }
+  .bm-tier.on { color: var(--green); }
+  .bm-need { font-family: var(--font-mono); font-size: 10px; color: var(--ink-dim); margin-top: 3px; line-height:1.6; }
+  .bm-need span { color: var(--gold); }
+
+  /* ═══ V2.1b ═══ BOSS CARD */
+  .boss-card { background: linear-gradient(135deg, rgba(200,168,75,0.06), transparent 60%), var(--bg); border: 1px solid #7a6020; padding: 9px 12px; margin-top: 8px; }
+  .boss-card-head { display:flex; gap:8px; align-items:center; margin-bottom:5px; flex-wrap:wrap; }
+  .boss-card-arch { font-family: var(--font-display); font-size: 12px; letter-spacing: 0.12em; color: var(--gold); text-transform:uppercase; }
+  .boss-card-power { font-family: var(--font-mono); font-size: 10px; color: #c8a84b; border:1px solid #7a6020; padding:1px 6px; letter-spacing:0.1em; text-transform:uppercase; }
+  .boss-card-threat { font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); line-height: 1.55; margin-bottom: 4px; }
+  .boss-card-advice { font-family: var(--font-mono); font-size: 11px; color: var(--ink); line-height: 1.55; }
+  .boss-card-advice b { color: var(--gold); font-weight: normal; letter-spacing:0.08em; }
+
+
+  /* ═══ V2.2 ═══ VERDICT / INTENT / MISC */
+  .lc-verdict { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; padding: 1px 6px; border: 1px solid; text-transform: uppercase; font-weight: bold; }
+  .loot-inv-count { font-family: var(--font-mono); font-size: 10px; color: var(--ink-dim); letter-spacing: 0.1em; }
+  .intent-row { display: flex; gap: 4px; margin-bottom: 5px; flex-wrap: wrap; }
+  .intent-chip { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; padding: 1px 5px; border: 1px solid; text-transform: uppercase; }
+
+  /* ═══ V2.3 ═══ STRUCT ICONS */
+  .struct-icon { vertical-align: -3px; margin-right: 5px; opacity: 0.9; flex-shrink: 0; }
+  .tt-name .struct-icon { vertical-align: -3px; }
+
+  /* ═══ V2.3 ═══ SPOILS TEASING */
+  .spoils-row { display: flex; align-items: center; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .spoil-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.22em; color: var(--gold-dim); text-transform: uppercase; }
+  .spoil-chip { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; padding: 2px 7px; border: 1px solid; display: inline-flex; align-items: center; text-transform: uppercase; }
+  .spoil-chip .struct-icon { margin-right: 4px; vertical-align: -2px; }
+  .spoil-hidden { color: #4a5866; border-color: #232c36; }
+
+  /* ═══ V2.3 ═══ LOOT RARITY CEREMONY */
+  @keyframes rarePulse { 0%,100% { box-shadow: 0 0 8px rgba(140,120,220,0.12); } 50% { box-shadow: 0 0 16px rgba(140,120,220,0.28); } }
+  @keyframes epicPulse { 0%,100% { box-shadow: 0 0 10px rgba(200,96,224,0.15); } 50% { box-shadow: 0 0 22px rgba(200,96,224,0.35); } }
+  @keyframes legendArrive { 0% { opacity:0; transform: scale(0.92); box-shadow: 0 0 60px rgba(200,168,75,0.7); } 45% { opacity:1; transform: scale(1.03); } 100% { transform: scale(1); box-shadow: 0 0 20px rgba(200,168,75,0.35); } }
+  .loot-r-rare { border-color: #6a5aa8 !important; animation: lootIn 0.28s ease both, rarePulse 2.4s ease-in-out infinite 0.3s; }
+  .loot-r-epic { border-color: #a050c8 !important; animation: lootIn 0.28s ease both, epicPulse 1.8s ease-in-out infinite 0.3s; }
+  .loot-r-legendary { border-color: var(--gold) !important; animation: legendArrive 0.7s ease both; }
+
+  /* ═══ V2.3 ═══ BROKEN SLOT PULSE */
+  @keyframes slotBroken { 0%,100% { border-color: var(--border); } 25%,75% { border-color: var(--red); box-shadow: 0 0 10px rgba(200,64,64,0.4); } 50% { border-color: #ff8080; } }
+  .equip-slot.slot-broken { animation: slotBroken 0.8s ease 2; }
+
+  /* ═══ V2.3 ═══ EQUIP PREVIEW */
+  .equip-preview { margin-top: 6px; border-top: 1px solid var(--border2); padding-top: 2px; }
+  .item-card.selected { border-color: var(--gold-dim); }
+
+  /* ═══ V2.4 ═══ */
+  .cmp-hint { font-family: var(--font-mono); font-size: 9px; color: var(--ink-faint); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 5px; transition: color 0.15s; }
+  .item-card:hover .cmp-hint { color: var(--gold-dim); }
+
+  /* ═══ INV-COMPARE OVERLAY ═══ */
+  #inv-compare-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.72); z-index:120; align-items:center; justify-content:center; }
+  #inv-compare-overlay.active { display:flex; }
+</style>
+</head>
+<body>
+
+<!-- TITLE -->
+<div id="screen-title" class="screen active">
+  <div class="title-canvas-wrap"><canvas id="titleCanvas" width="400" height="120"></canvas></div>
+  <div class="title-sub">Dungeon Loot Crawler &mdash; Procedural Arms</div>
+  <div class="title-btns">
+    <button class="btn-primary" onclick="startGame()">Begin Descent</button>
+    <button class="btn-secondary" onclick="showLeaderboard()">Records</button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="screen-game" class="screen">
+  <div class="game-header">
+    <span class="game-title-small">IRON VEIL</span>
+    <span class="floor-indicator">FLOOR <span class="floor-num" id="floorNum">1</span></span>
+    <span class="faction-display" id="factionDisplay"></span>
+    <span class="shards-display" id="shardsDisplay">0 Shards</span>
+  </div>
+  <div class="game-body">
+    <!-- LEFT -->
+    <div class="panel">
+      <div class="panel-title">Adventurer</div>
+      <div class="panel-body">
+        <canvas id="playerCanvas" width="80" height="80"></canvas>
+        <div class="stat-block">
+          <div class="stat-row"><span class="stat-label">HP</span><span class="stat-value" id="playerHpVal">100 / 100</span></div>
+          <div class="hp-bar-wrap"><div class="hp-bar" id="playerHpBar" style="width:100%"></div></div>
+          <div class="status-effects" id="playerStatus"></div>
+        </div>
+        <div class="stat-block">
+          <div class="stat-row"><span class="stat-label">ATK</span><span class="stat-value" id="pATK">10</span></div>
+          <div class="stat-row"><span class="stat-label">DEF</span><span class="stat-value" id="pDEF">5</span></div>
+          <div class="stat-row"><span class="stat-label">SPD</span><span class="stat-value" id="pSPD">8</span></div>
+          <div class="stat-row"><span class="stat-label">CRIT</span><span class="stat-value" id="pCRIT">8%</span></div>
+          <div class="stat-row"><span class="stat-label">DODGE</span><span class="stat-value" id="pDODGE">5%</span></div>
+        </div>
+        <div class="section-divider"></div>
+        <div class="panel-title" style="padding:0 0 6px 0;border:none;">Equipment</div>
+        <div class="equip-grid" id="equipGrid"></div>
+        <div class="section-divider"></div>
+        <div class="panel-title" style="padding:0 0 6px 0;border:none;">Run</div>
+        <div id="runPanel"></div>
+        <div class="section-divider"></div>
+        <div class="panel-title" style="padding:0 0 6px 0;border:none;">Build<button class="build-help-btn" onclick="showBuildHelp()" title="What are builds?">?</button></div>
+        <div id="buildPanel"></div>
+      </div>
+    </div>
+    <!-- CENTER -->
+    <div class="combat-area">
+      <div class="combat-stage"><canvas id="combatCanvas"></canvas></div>
+      <div class="combat-ui">
+        <div class="enemy-name-bar">
+          <span class="enemy-name" id="enemyName">—</span>
+          <span class="enemy-type-badge" id="enemyTypeBadge">—</span>
+        </div>
+        <div class="enemy-hp-wrap"><div class="enemy-hp-bar" id="enemyHpBar" style="width:100%"></div></div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px;">
+          <span style="font-family:var(--font-mono);font-size:10px;color:var(--ink-dim);" id="enemyHpVal">—</span>
+          <div class="status-effects" id="enemyStatus" style="margin:0;"></div>
+        </div>
+        <div class="matchup-row" id="matchupRow"></div>
+        <div class="boss-card" id="bossCard" style="display:none;"></div>
+        <div class="spoils-row" id="spoilsRow" style="display:none;"></div>
+      </div>
+      <div class="combat-log" id="combatLog"></div>
+      <div class="combat-actions">
+        <button class="btn-action attack" id="btnAttack" onclick="playerAttack()">Attack</button>
+        <button class="btn-action" id="btnGuard" onclick="playerGuard()" style="color:#4a90c8;border-color:#2a4a68;">Guard</button>
+        <button class="btn-action" id="btnFlee" onclick="attemptFlee()">Flee</button>
+      </div>
+    </div>
+    <!-- RIGHT -->
+    <div class="panel">
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('inventory')">Inventory</button>
+        <button class="tab-btn" onclick="switchTab('equipped')">Equipped</button>
+      </div>
+      <div class="tab-content active" id="tab-inventory"><div class="panel-body" id="inventoryList"></div></div>
+      <div class="tab-content" id="tab-equipped"><div class="panel-body" id="equippedDetail"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOOT OVERLAY -->
+<div id="loot-overlay">
+  <div class="loot-box">
+    <div class="loot-title" id="lootTitle">Victory</div>
+    <div class="loot-subtitle" id="lootSubtitle">Choose your reward</div>
+    <div class="loot-items" id="lootItems"></div>
+    <div class="loot-actions">
+      <button class="btn-action" onclick="takeAllLoot()" id="btnTakeLoot">Take All</button>
+    </div>
+    <button class="next-floor-btn" id="btnNextFloor" onclick="nextFloor()" style="display:none;">Descend to Next Floor</button>
+  </div>
+</div>
+
+<!-- SMITH OVERLAY -->
+<div id="smith-overlay">
+  <div class="smith-box">
+    <div class="smith-title">The Forge</div>
+    <div class="smith-sub">Repair, sell, extract, infuse, reinforce</div>
+    <div class="smith-shards" id="smithShards">Shards: 0</div>
+    <div class="smith-tabs">
+      <button class="smith-tab active" id="stab-repair" onclick="setSmithTab('repair')">Repair</button>
+      <button class="smith-tab" id="stab-sell" onclick="setSmithTab('sell')">Sell</button>
+      <button class="smith-tab" id="stab-extract" onclick="setSmithTab('extract')">Extract</button>
+      <button class="smith-tab" id="stab-infuse" onclick="setSmithTab('infuse')">Infuse</button>
+      <button class="smith-tab" id="stab-reinforce" onclick="setSmithTab('reinforce')">Reinforce</button>
+    </div>
+    <div id="smithContent"></div>
+    <div style="margin-top:14px;">
+      <button class="btn-action" onclick="closeSmith()">Leave Forge</button>
+    </div>
+  </div>
+</div>
+
+<!-- RELIC OVERLAY -->
+<div id="relic-overlay">
+  <div class="loot-box">
+    <div class="loot-title">Choose a Relic</div>
+    <div class="loot-subtitle">Relics do not break — they shape the entire descent</div>
+    <div id="relicRunBrief"></div>
+    <div class="loot-items" id="relicItems"></div>
+  </div>
+</div>
+
+<!-- LEADERBOARD OVERLAY -->
+<div id="lb-overlay">
+  <div class="lb-box">
+    <div class="lb-header">
+      <div class="lb-title">Hall of Descent</div>
+      <div class="lb-desc">Top 20 runs &mdash; click an entry to inspect equipment</div>
+    </div>
+    <div class="lb-body" id="lbBody"></div>
+    <div class="lb-footer">
+      <button class="btn-action" onclick="closeLb()">Close</button>
+      <button class="btn-action" onclick="clearLb()" style="border-color:var(--red-dim);color:var(--ink-dim);">Clear Records</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div id="screen-gameover" class="screen">
+  <div class="end-title defeat">IRON VEIL</div>
+  <div class="end-sub">The darkness claims another soul</div>
+  <div class="end-stats" id="deathStats"></div>
+  <div class="end-btns">
+    <button class="btn-primary" onclick="startGame()">Descend Again</button>
+    <button class="btn-secondary" onclick="showLeaderboard()">Records</button>
+  </div>
+</div>
+
+<!-- VICTORY -->
+<div id="screen-victory" class="screen">
+  <div class="end-title victory">IRON VEIL</div>
+  <div class="end-sub">The Veil has been pierced</div>
+  <div class="end-stats" id="victoryStats"></div>
+  <div class="end-btns">
+    <button class="btn-primary" onclick="startGame()">A New Descent</button>
+    <button class="btn-secondary" onclick="showLeaderboard()">Records</button>
+  </div>
+</div>
+
+<!-- INVENTORY COMPARE OVERLAY -->
+<div id="inv-compare-overlay" onclick="if(event.target===this)closeInvCompare()">
+  <div class="loot-box" style="width:640px;">
+    <div class="loot-title" id="icTitle">Compare</div>
+    <div class="loot-subtitle" id="icSubtitle"></div>
+    <div id="icBody" style="margin-bottom:16px;"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="next-floor-btn" id="icEquipBtn" style="background:var(--gold);flex:1;"></button>
+      <button class="next-floor-btn" style="background:var(--panel);border:1px solid var(--border2);color:var(--ink);width:120px;" onclick="closeInvCompare()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- BUILD HELP OVERLAY -->
+<div id="build-overlay" onclick="if(event.target===this)closeBuildHelp()">
+  <div class="loot-box" style="width:560px;">
+    <div class="loot-title">Builds &amp; Tags</div>
+    <div class="loot-subtitle">Shape your run through your gear</div>
+    <div id="buildHelpBody"></div>
+    <button class="next-floor-btn" style="background:var(--gold);" onclick="closeBuildHelp()">Close</button>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//   IRON VEIL — Core Engine V2
+//   item = structure + material + rarity + affixes + durability (+reinforce)
+//   run  = relic + factions + carry-over + build tags
+// ══════════════════════════════════════════════════════════════
+
+const RNG = {
+  rand:(min,max)=>Math.floor(Math.random()*(max-min+1))+min,
+  chance:(pct)=>Math.random()*100<pct,
+  pick:(arr)=>arr[Math.floor(Math.random()*arr.length)],
+  pickW:(arr)=>{ let t=arr.reduce((s,x)=>s+x.w,0),r=Math.random()*t; for(let x of arr){r-=x.w;if(r<=0)return x.val;} return arr[arr.length-1].val; }
+};
+
+const RARITIES=[
+  {id:'common',   name:'Common',   color:'#8aa0b0',attrCount:1,statMult:1.0,w:50,durMax:24,shard_base:3},
+  {id:'uncommon', name:'Uncommon', color:'#4ac870',attrCount:1,statMult:1.3,w:28,durMax:22,shard_base:8},
+  {id:'rare',     name:'Rare',     color:'#4a90c8',attrCount:2,statMult:1.7,w:14,durMax:20,shard_base:18},
+  {id:'epic',     name:'Epic',     color:'#9a60c8',attrCount:2,statMult:2.2,w:6, durMax:18,shard_base:35},
+  {id:'legendary',name:'Legendary',color:'#c8a84b',attrCount:3,statMult:3.0,w:2, durMax:16,shard_base:70},
+];
+const RAR_IDX={};RARITIES.forEach((r,i)=>RAR_IDX[r.id]=i);
+// Forge caps & costs (V2)
+const AFFIX_CAP={common:1,uncommon:2,rare:2,epic:3,legendary:4};
+const EXTRACT_COST={common:null,uncommon:8,rare:15,epic:25,legendary:40};
+const REINFORCE_LEVELS=[
+  null,
+  {bonus:0.10,minRar:0,cost:(ri)=>18+10*ri},
+  {bonus:0.18,minRar:2,cost:(ri)=>36+16*ri},
+  {bonus:0.25,minRar:3,cost:(ri)=>70+24*ri},
+];
+const REINFORCE_BONUS=[0,0.10,0.18,0.25];
+
+const MATERIALS=[
+  {id:'iron',   name:'Iron',    color:'#8aa0b0',atk:1.0,def:1.0},
+  {id:'steel',  name:'Steel',   color:'#b0c0d0',atk:1.1,def:1.2},
+  {id:'bone',   name:'Bone',    color:'#d0c890',atk:0.9,def:0.8},
+  {id:'wood',   name:'Wood',    color:'#a08050',atk:0.8,def:0.7},
+  {id:'arcane', name:'Arcane',  color:'#a060e0',atk:1.4,def:0.9},
+  {id:'fire',   name:'Fire',    color:'#e06030',atk:1.5,def:0.8},
+  {id:'ice',    name:'Ice',     color:'#60c0e0',atk:1.2,def:1.1},
+  {id:'shadow', name:'Shadow',  color:'#7050a0',atk:1.3,def:1.0},
+  {id:'light',  name:'Light',   color:'#e0d060',atk:1.1,def:1.3},
+  {id:'poison', name:'Poison',  color:'#70c040',atk:1.3,def:0.8},
+  {id:'silver', name:'Silver',  color:'#d0d8e0',atk:1.2,def:1.1},
+  {id:'obsidian',name:'Obsidian',color:'#404060',atk:1.6,def:1.0},
+];
+const MAT={};MATERIALS.forEach(m=>MAT[m.id]=m);
+const SLOTS=['Weapon','Armor','Helmet','Boots','Amulet'];
+
+// ─── BUILD TAGS ──────────────────────────────────────────────
+const TAGS={
+  bleed:   {name:'BLEED',   color:'#c84060'},
+  crit:    {name:'CRIT',    color:'#e0c060'},
+  poison:  {name:'POISON',  color:'#70c040'},
+  defense: {name:'DEFENSE', color:'#4a90c8'},
+  mobility:{name:'MOBILITY',color:'#60c0e0'},
+  burn:    {name:'BURN',    color:'#e06030'},
+  drain:   {name:'DRAIN',   color:'#c060a0'},
+  economy: {name:'ECONOMY', color:'#c8a84b'},
+};
+
+// ─── AFFIXES ─────────────────────────────────────────────────
+// tags: build family / slots: where the affix can appear (gen + infusion)
+const ALL_ATTRIBUTES=[
+  {id:'vampiric',    name:'Vampiric',    desc:'Steal 8% of damage dealt as HP',          color:'#c84060',tags:['drain'],           slots:['Weapon','Amulet'],           w:10},
+  {id:'reactive',    name:'Reactive',    desc:'30% chance to counter-attack',            color:'#4a90c8',tags:['defense'],         slots:['Weapon','Armor'],            w:10},
+  {id:'cursed',      name:'Cursed',      desc:'+40% ATK, -20% DEF',                      color:'#9a60c8',tags:['crit'],            slots:['Weapon','Amulet'],           w:8},
+  {id:'blessed',     name:'Blessed',     desc:'Immune to status effects',                color:'#e0d060',tags:['defense'],         slots:['Armor','Helmet','Amulet'],   w:8},
+  {id:'piercing',    name:'Piercing',    desc:'Ignores 25% enemy DEF',                   color:'#8aa0b0',tags:['crit'],            slots:['Weapon'],                    w:10},
+  {id:'unstable',    name:'Unstable',    desc:'Crit deals x2.5, -3 dur per crit',        color:'#c87040',tags:['crit'],            slots:['Weapon'],                    w:9},
+  {id:'serrated',    name:'Serrated',    desc:'15% chance to inflict Bleed',             color:'#c84040',tags:['bleed'],           slots:['Weapon'],                    w:10},
+  {id:'venom',       name:'Venomous',    desc:'20% chance to Poison enemy',              color:'#70c040',tags:['poison'],          slots:['Weapon'],                    w:10},
+  {id:'swift',       name:'Swift',       desc:'+12 SPD',                                 color:'#60c0e0',tags:['mobility'],        slots:['Weapon','Boots'],            w:10},
+  {id:'stalwart',    name:'Stalwart',    desc:'+15 DEF',                                 color:'#4a90c8',tags:['defense'],         slots:['Armor','Helmet','Boots'],    w:10},
+  {id:'brittle',     name:'Brittle',     desc:'+25% ATK, durability starts at 50%',      color:'#c8a84b',tags:['economy'],         slots:['Weapon','Armor'],            w:7},
+  {id:'tenacious',   name:'Tenacious',   desc:'When HP < 30%: +30% ATK & CRIT',          color:'#e06030',tags:['crit'],            slots:['Weapon','Helmet','Amulet'],  w:8},
+  {id:'phantom',     name:'Phantom',     desc:'+18% Dodge',                              color:'#7050a0',tags:['mobility'],        slots:['Boots','Helmet','Amulet'],   w:9},
+  {id:'igniting',    name:'Igniting',    desc:'10% chance to Burn enemy',                color:'#e06030',tags:['burn'],            slots:['Weapon'],                    w:9},
+  {id:'regenerative',name:'Regenerative',desc:'Regenerates 4 HP at turn start (cap 8)',  color:'#4ac870',tags:['drain','defense'], slots:['Armor','Amulet','Boots'],    w:9},
+  {id:'spiked',      name:'Spiked',      desc:'Returns 15% received damage',             color:'#8aa0b0',tags:['defense'],         slots:['Armor'],                     w:9},
+  {id:'heavy',       name:'Heavy',       desc:'+20 ATK, -8 SPD',                         color:'#a08050',tags:['crit'],            slots:['Weapon','Boots'],            w:9},
+  {id:'sharpened',   name:'Sharpened',   desc:'+12% CRIT chance',                        color:'#b0c0d0',tags:['crit'],            slots:['Weapon','Helmet','Amulet'],  w:10},
+  {id:'warded',      name:'Warded',      desc:'First hit per combat is negated',         color:'#e0d060',tags:['defense'],         slots:['Armor','Helmet','Amulet'],   w:8},
+  {id:'soulbound',   name:'Soulbound',   desc:'No durability loss during combat',        color:'#9a60c8',tags:['economy'],         slots:['Weapon','Armor','Helmet','Boots','Amulet'],w:6},
+  // ── V2 build affixes ──
+  {id:'hemorrhage',  name:'Hemorrhage',  desc:'Re-applying Bleed intensifies it (+1 tick, cap 10 / 8 vs boss)',color:'#c84060',tags:['bleed'],   slots:['Weapon','Helmet','Amulet'],w:8},
+  {id:'bloodfeast',  name:'Blood Feast', desc:'Enemy Bleed ticks heal you (40%, max 4 HP/tick)',               color:'#c060a0',tags:['bleed','drain'],slots:['Armor','Amulet'],    w:8},
+  {id:'bloodburst',  name:'Blood Explosion',desc:'Enemy dying while bleeding: next foe starts bleeding',       color:'#c84040',tags:['bleed'],   slots:['Weapon','Amulet'],         w:7},
+  {id:'executioner', name:'Executioner', desc:'+35% damage vs enemies below 30% HP',                           color:'#e0c060',tags:['crit'],    slots:['Weapon','Helmet','Amulet'],w:8},
+  {id:'glasscannon', name:'Glass Cannon',desc:'+20% damage dealt, +15% damage taken',                          color:'#e08050',tags:['crit'],    slots:['Weapon','Amulet'],         w:7},
+  {id:'toxicbloom',  name:'Toxic Bloom', desc:'Enemy dying while poisoned: next foe starts poisoned',          color:'#a0c84a',tags:['poison'],  slots:['Weapon','Amulet'],         w:7},
+  {id:'corrosion',   name:'Corrosion',   desc:'Each Poison tick shreds enemy DEF (-1, cap 40% / 25% vs boss)', color:'#70c040',tags:['poison'],  slots:['Weapon','Helmet','Amulet'],w:8},
+  {id:'plaguecarrier',name:'Plague Carrier',desc:'35% chance the enemy starts poisoned (2 turns)',             color:'#4a6020',tags:['poison'],  slots:['Helmet','Armor','Amulet'], w:7},
+  {id:'fortress',    name:'Fortress',    desc:'-15% damage taken, -8 SPD',                                     color:'#4a90c8',tags:['defense'], slots:['Armor','Helmet','Boots'],  w:8},
+  {id:'momentum',    name:'Momentum',    desc:'After a dodge, next attack deals +30% damage',                  color:'#60c0e0',tags:['mobility'],slots:['Boots','Weapon','Amulet'], w:8},
+  {id:'shadowstep',  name:'Shadowstep',  desc:'First dodge each combat: counter for 40% ATK',                  color:'#7050a0',tags:['mobility'],slots:['Boots','Amulet'],          w:7},
+];
+const ATTR={};ALL_ATTRIBUTES.forEach(a=>ATTR[a.id]=a);
+
+// ─── STRUCTURES (V2) ─────────────────────────────────────────
+// Structures shape the stat profile and bias which affixes appear.
+const STRUCTURES={
+  Weapon:[
+    {id:'Dagger', prof:'Fast — frequent procs',      atkM:0.70,spdF:5, critF:5, durMod:2, favor:['venom','serrated','momentum','swift']},
+    {id:'Sword',  prof:'Versatile',                  atkM:1.00,                 durMod:2, favor:['sharpened','vampiric','blessed']},
+    {id:'Cleaver',prof:'Heavy bleeder',              atkM:1.25,spdF:-2,         durMod:-3,favor:['serrated','hemorrhage','executioner']},
+    {id:'Axe',    prof:'Brutal',                     atkM:1.20,spdF:-2,critF:3,           favor:['heavy','executioner','glasscannon']},
+    {id:'Mace',   prof:'Armor breaker',              atkM:1.05,                            favor:['corrosion','stalwart','fortress']},
+    {id:'Spear',  prof:'Precise',                    atkM:1.00,critF:3,         durMod:-2,favor:['piercing','sharpened']},
+    {id:'Flail',  prof:'Chaotic',                    atkM:1.00,varR:4,                     favor:['reactive','serrated','unstable']},
+    {id:'Scythe', prof:'Executioner — short-lived',  atkM:1.35,critF:6,         durMod:-8,favor:['unstable','executioner','bloodfeast']},
+    {id:'Halberd',prof:'Massive — wears fast',       atkM:1.45,spdF:-5,         durMod:-5,favor:['piercing','heavy','vampiric']},
+  ],
+  Armor:[
+    {id:'Plate',   prof:'Heavy defense',            defM:1.30,spdF:-4,          favor:['fortress','stalwart','spiked']},
+    {id:'Shroud',  prof:'Light — evasive',          defM:0.70,dodgeF:6,         favor:['phantom','blessed','regenerative']},
+    {id:'Mantle',  prof:'Utility',                  defM:0.85,hpF:8,            favor:['warded','plaguecarrier','bloodfeast']},
+    {id:'Carapace',prof:'Riposte — costly repairs', defM:1.15,        durMod:-4,favor:['spiked','reactive','fortress']},
+    {id:'Vest',    prof:'Balanced',                 defM:1.00,                  favor:[]},
+  ],
+  Helmet:[
+    {id:'Helm',  prof:'Bulwark',       defM:1.20,          favor:['stalwart','fortress']},
+    {id:'Cowl',  prof:'Nimble',        defM:0.80,dodgeF:4,spdF:2,favor:['phantom','swift','shadowstep']},
+    {id:'Mask',  prof:'Pestilent',     defM:0.85,          favor:['plaguecarrier','bloodfeast','blessed']},
+    {id:'Crown', prof:'Keen',          defM:0.90,critF:4,  favor:['sharpened','executioner','warded']},
+    {id:'Visage',prof:'Dreadful',      defM:0.90,          favor:['corrosion','hemorrhage']},
+  ],
+  Boots:[
+    {id:'Greaves', prof:'Grounded',   spdM:0.80,defF:3,   favor:['stalwart','fortress']},
+    {id:'Treads',  prof:'Swift',      spdM:1.30,          favor:['swift','momentum']},
+    {id:'Walkers', prof:'Economic',   spdM:1.00,durMod:6, favor:['soulbound','regenerative']},
+    {id:'Shackles',prof:'Slow power', spdM:0.60,defF:4,   favor:['heavy','fortress']},
+    {id:'Stirrups',prof:'Elusive',    spdM:1.00,dodgeM:1.3,favor:['phantom','shadowstep','reactive']},
+  ],
+  Amulet:[
+    {id:'Pendant', prof:'Sustain',        favor:['vampiric','bloodfeast','regenerative']},
+    {id:'Talisman',prof:'Warding',        favor:['blessed','warded','soulbound']},
+    {id:'Sigil',   prof:'Build amplifier',favor:['hemorrhage','corrosion','executioner']},
+    {id:'Eye',     prof:'Keen sight',     favor:['sharpened','momentum','phantom']},
+    {id:'Charm',   prof:'Economic',       durMod:6,favor:['soulbound']},
+  ],
+};
+
+const WEAPON_PREFIXES=['Shattered','Runed','Ancient','Cruel','Ghostly','Blazing','Voidborn','Pale','Barbed','Hollow','Dread','Twinned','Fell'];
+const SUFFIX_BY_TAG={bleed:'of the Wound',crit:'of the Edge',poison:'of Corrosion',defense:'of the Bastion',mobility:'of the Wind',drain:'of Thirst',economy:'of the Anvil',burn:'of Embers'};
+
+const TYPE_CHART={
+  undead:   {weak:['light','fire','silver'],  resist:['poison','ice','shadow'], immune:[]},
+  demon:    {weak:['ice','arcane','light'],   resist:['fire','shadow'],         immune:[]},
+  golem:    {weak:['arcane','poison'],        resist:['iron','steel','bone'],   immune:['wood']},
+  spirit:   {weak:['light','arcane'],         resist:['iron','steel','wood'],   immune:['shadow']},
+  beast:    {weak:['fire','silver'],          resist:['wood','bone'],           immune:[]},
+  fungal:   {weak:['fire','ice'],             resist:['poison','wood'],         immune:[]},
+  construct:{weak:['arcane','obsidian'],      resist:['iron','bone'],           immune:[]},
+  abyssal:  {weak:['light','fire'],           resist:['shadow','arcane'],       immune:[]},
+};
+
+const ENEMY_TEMPLATES=[
+  {name:'Hollow Knight', type:'undead',   hp:30,atk:8, def:3, spd:6, shards:[2,5]},
+  {name:'Plague Rat',    type:'beast',    hp:20,atk:9, def:1, spd:12,shards:[1,3]},
+  {name:'Stone Sentinel',type:'golem',    hp:50,atk:6, def:12,spd:3, shards:[4,8]},
+  {name:'Wraith',        type:'spirit',   hp:25,atk:9, def:2, spd:10,shards:[2,5]},
+  {name:'Bone Archer',   type:'undead',   hp:28,atk:9, def:2, spd:8, shards:[2,4]},
+  {name:'Ashborn Imp',   type:'demon',    hp:35,atk:10,def:4, spd:9, shards:[3,6]},
+  {name:'Mycelium Horror',type:'fungal',  hp:40,atk:7, def:6, spd:5, shards:[3,7]},
+  {name:'Runed Golem',   type:'construct',hp:60,atk:8, def:14,spd:2, shards:[5,10]},
+  {name:'Voidwalker',    type:'abyssal',  hp:32,atk:11,def:3, spd:11,shards:[4,8]},
+  {name:'Direwolf',      type:'beast',    hp:38,atk:12,def:5, spd:13,shards:[3,6]},
+  {name:'Shadow Fiend',  type:'demon',    hp:30,atk:11,def:2, spd:12,shards:[4,7]},
+  {name:'Crypt Lurker',  type:'undead',   hp:45,atk:10,def:7, spd:6, shards:[4,8]},
+];
+const ENEMY_ABILITIES=[
+  {id:'poison_bite',  name:'Poison Bite',  chance:25,effect:'poison'},
+  {id:'burning_slash',name:'Burning Slash',chance:20,effect:'burn'},
+  {id:'stun_blow',    name:'Stun Blow',    chance:15,effect:'stun'},
+  {id:'bleed_strike', name:'Bleed Strike', chance:20,effect:'bleed'},
+  {id:'drain',        name:'Life Drain',   chance:20,effect:'drain'},
+  {id:'double_strike',name:'Double Strike',chance:15,effect:'double'},
+];
+
+// ─── FACTIONS (V2) ───────────────────────────────────────────
+const FACTIONS=[
+  {id:'ashborn',    name:'Ashborn Demons',   color:'#e06030',types:['demon','abyssal'],   mats:['fire','light','ice','obsidian'],  affixes:['igniting','glasscannon','blessed','executioner'],  bossArch:['berserker','hexer']},
+  {id:'bonecult',   name:'Bone Cult',        color:'#d0c890',types:['undead'],            mats:['bone','silver','light','iron'],   affixes:['serrated','bloodfeast','blessed','warded'],        bossArch:['tank','regenerator']},
+  {id:'verdant',    name:'Verdant Rot',      color:'#70c040',types:['fungal','beast'],    mats:['poison','wood','fire','ice'],     affixes:['venom','corrosion','plaguecarrier','regenerative'],bossArch:['regenerator','hexer']},
+  {id:'manufactury',name:'Runed Manufactury',color:'#8aa0b0',types:['construct','golem'], mats:['steel','arcane','obsidian','iron'],affixes:['piercing','fortress','reactive','corrosion'],     bossArch:['reflector','tank']},
+  {id:'voidchoir',  name:'Void Choir',       color:'#9a60c8',types:['spirit','abyssal'],  mats:['shadow','light','arcane','silver'],affixes:['phantom','shadowstep','warded','soulbound'],      bossArch:['assassin','reflector']},
+];
+
+// ─── BOSS MODULES (V2) ───────────────────────────────────────
+const BOSS_ARCHETYPES=[
+  {id:'berserker',  name:'Berserker',  title:'Tyrant',  hpM:0.95,atkM:1.10,defM:0.90,spdF:1, tele:'It grows stronger when wounded.'},
+  {id:'tank',       name:'Tank',       title:'Bulwark', hpM:1.50,atkM:0.85,defM:1.60,spdF:-2,tele:'A long, grinding fight.'},
+  {id:'reflector',  name:'Reflector',  title:'Mirror',  hpM:1.10,atkM:0.95,defM:1.20,spdF:0, tele:'Critical damage will be reflected.'},
+  {id:'assassin',   name:'Assassin',   title:'Shade',   hpM:0.85,atkM:1.20,defM:0.80,spdF:5, tele:'It strikes fast — and twice.'},
+  {id:'regenerator',name:'Regenerator',title:'Undying', hpM:1.20,atkM:0.90,defM:1.10,spdF:0, tele:'It knits its wounds shut.'},
+  {id:'hexer',      name:'Hexer',      title:'Cantor',  hpM:1.00,atkM:1.00,defM:1.00,spdF:1, tele:'Its blows carry curses.'},
+];
+const BOSS_POWERS=[
+  {id:'ashtyranny',   name:'Ash Tyranny',   tele:'Grows stronger with each blow it suffers.'},
+  {id:'silentrenewal',name:'Silent Renewal',tele:'The boss gathers itself over time.'},
+  {id:'mirrorshell',  name:'Mirror Shell',  tele:'Critical damage will be reflected.'},
+  {id:'plagueaura',   name:'Plague Aura',   tele:'Status effects on you linger longer.'},
+  {id:'irontax',      name:'Iron Tax',      tele:'Your gear strains under its aura.'},
+  {id:'veilshift',    name:'Veil Shift',    tele:'Its form hardens when wounded.'},
+  {id:'bonelock',     name:'Bone Lock',     tele:'Your movement is constrained while it stands strong.'},
+  {id:'lastoath',     name:'Last Oath',     tele:'A final ward awakens near death.'},
+];
+const BOSS_ADJ={
+  undead:['Pale','Grave','Hollow','Bone'],demon:['Ash','Cinder','Infernal'],golem:['Stone','Runed','Granite'],
+  spirit:['Silent','Veiled','Wailing'],beast:['Feral','Dire','Ravening'],fungal:['Verdant','Sporing','Rotting'],
+  construct:['Iron','Mirror','Clockwork'],abyssal:['Void','Abyssal','Nameless'],
+};
+
+// ─── RELICS (V2) ─────────────────────────────────────────────
+const RELICS=[
+  {id:'brokencrown', name:'Broken Crown',  good:'+1 loot choice after each boss',                 bad:'Bosses have +30% HP',          tags:['economy']},
+  {id:'blacklantern',name:'Black Lantern', good:'Enemies start each fight with Poison (2 turns)', bad:'Your direct damage -15%',      tags:['poison']},
+  {id:'clockwork',   name:'Clockwork Heart',good:'Revive once at 40% HP',                         bad:'Repairs cost +50%',            tags:['defense','economy']},
+  {id:'gravebloom',  name:'Grave Bloom',   good:'Bleed/Poison carry-over lasts +1 turn',          bad:'Max HP -10%',                  tags:['bleed','poison']},
+  {id:'glassidol',   name:'Glass Idol',    good:'+10% crit, +10% direct damage',                  bad:'Damage taken +15%',            tags:['crit']},
+  {id:'vulturecoin', name:'Vulture Coin',  good:'Selling items +50% shards',                      bad:'Repairs cost +25%',            tags:['economy']},
+  {id:'silentbell',  name:'Silent Bell',   good:'First hit of each boss deals -50% damage',       bad:'Normal enemies give -20% shards',tags:['defense']},
+  {id:'whetstone',   name:'Whetstone Oath',good:'Weapons wear twice as slowly',                   bad:'Weapon repairs cost +20%',     tags:['economy','crit']},
+];
+const RELIC_BY_ID={};RELICS.forEach(r=>RELIC_BY_ID[r.id]=r);
+
+// ─── STATE ───────────────────────────────────────────────────
+let G={};
+
+function initState(){
+  G={
+    floor:1,shards:0,kills:0,bossKills:0,totalFloors:15,
+    combat:{active:false,processing:false,wardUsed:false,momentum:false,shadowUsed:false,bellUsed:false},
+    player:{hp:100,maxHp:100,baseAtk:10,baseDef:5,baseSpd:8,baseCrit:8,baseDodge:5,status:[]},
+    enemy:null,
+    equipment:{Weapon:null,Armor:null,Helmet:null,Boots:null,Amulet:null},
+    inventory:[],
+    selectedLoot:null,
+    lootItems:[],
+    // V2
+    relic:null,
+    reviveUsed:false,
+    factions:null,          // {dominant,secondary,rare}
+    carryOver:{},           // {bleed:{power,dur}, poison:{power,dur}}
+    essences:[],            // [{affix:'vampiric', from:'item name'}]
+    forgeConfirm:null,      // two-step destructive confirmation key
+    essenceSel:null,
+    invSel:null,            // inventory card expanded into equip preview
+  };
+  generateRunProfile();
+  // Starter gear: give a basic iron sword so floor 1 isn't naked
+  const starterMat=MAT['iron'];
+  const starterSt=STRUCTURES.Weapon.find(s=>s.id==='Sword');
+  G.equipment.Weapon={
+    id:'starter_sword',name:'Worn Iron Sword',slot:'Weapon',structure:'Sword',
+    rarity:'common',material:'iron',
+    stats:{atk:8},attrs:[],
+    durability:18,durMax:22,reinforce:0,
+  };
+  G.shards=15; // small starting purse for the first forge visit
+}
+
+function generateRunProfile(){
+  const pool=[...FACTIONS];
+  const pick=()=>{const i=Math.floor(Math.random()*pool.length);return pool.splice(i,1)[0];};
+  G.factions={dominant:pick(),secondary:pick(),rare:pick()};
+}
+
+function relicIs(id){return G.relic&&G.relic.id===id;}
+
+// ─── DERIVED STATS ───────────────────────────────────────────
+function reinforceMult(item){return 1+REINFORCE_BONUS[item.reinforce||0];}
+
+function getPlayerStats(){
+  let atk=G.player.baseAtk,def=G.player.baseDef,spd=G.player.baseSpd;
+  let crit=G.player.baseCrit,dodge=G.player.baseDodge,hp=G.player.maxHp;
+  for(const slot of SLOTS){
+    const it=G.equipment[slot];if(!it)continue;
+    const ef=durabilityEffect(it)*reinforceMult(it);
+    atk  +=(it.stats.atk  ||0)*ef;
+    def  +=(it.stats.def  ||0)*ef;
+    spd  +=(it.stats.spd  ||0)*ef;
+    crit +=(it.stats.crit ||0)*ef;
+    dodge+=(it.stats.dodge||0)*ef;
+    hp   +=(it.stats.hp   ||0)*ef;
+    for(const aid of activeAttrs(it)){
+      if(aid==='swift')    spd  +=12*ef;
+      if(aid==='stalwart') def  +=15*ef;
+      if(aid==='cursed')  {atk *=1.4;def*=0.8;}
+      if(aid==='heavy')   {atk +=20*ef;spd-=8*ef;}
+      if(aid==='sharpened')crit+=12*ef;
+      if(aid==='phantom')  dodge+=18*ef;
+      if(aid==='brittle')  atk +=(it.stats.atk||0)*0.25*ef;
+      if(aid==='fortress') spd -=8*ef;
+    }
+  }
+  if(relicIs('glassidol'))crit+=10;
+  if(relicIs('gravebloom'))hp=hp*0.9;
+  crit=Math.max(0,Math.min(crit,75));
+  dodge=Math.max(0,Math.min(dodge,50));
+  spd=Math.max(1,spd);atk=Math.max(1,atk);def=Math.max(0,def);
+  return{atk:Math.round(atk),def:Math.round(def),spd:Math.round(spd),crit:Math.round(crit),dodge:Math.round(dodge),maxHp:Math.round(hp)};
+}
+
+// V2 durability rule: Broken (0) = no stats, no affixes, no hidden value.
+function durabilityEffect(item){
+  if(!item)return 1;
+  if(item.durability<=0)return 0;
+  const pct=item.durability/item.durMax;
+  if(pct>0.5) return 1.0;
+  if(pct>0.25)return 0.9;
+  if(pct>0.1) return 0.7;
+  return 0.4;
+}
+
+function activeAttrs(item){
+  if(!item)return[];
+  if(item.durability<=0)return[];
+  const pct=item.durability/item.durMax;
+  if(pct>0.25)return item.attrs;
+  if(pct>0.1) return item.attrs.slice(0,Math.max(0,item.attrs.length-1));
+  return item.attrs.slice(0,1);
+}
+
+// Any equipped item currently providing this affix?
+function hasAffix(aid){
+  return SLOTS.some(s=>G.equipment[s]&&activeAttrs(G.equipment[s]).includes(aid));
+}
+function equippedAffixIds(){
+  const out=new Set();
+  SLOTS.forEach(s=>{const it=G.equipment[s];if(it)it.attrs.forEach(a=>out.add(a));});
+  return out;
+}
+// Build tag counts over ACTIVE affixes of equipped items (durability matters).
+function countBuildTags(){
+  const c={};
+  SLOTS.forEach(s=>{
+    const it=G.equipment[s];if(!it)return;
+    activeAttrs(it).forEach(aid=>{
+      (ATTR[aid]?.tags||[]).forEach(t=>c[t]=(c[t]||0)+1);
+    });
+  });
+  return c;
+}
+function topBuildTags(n){
+  const c=countBuildTags();
+  return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,n).map(([t])=>t);
+}
+
+// Damage modifiers (applied once, regardless of item count)
+function directDamageInfo(enemy){
+  let m=1;const notes=[];
+  if(hasAffix('glasscannon')){m*=1.2;}
+  if(relicIs('glassidol'))m*=1.1;
+  if(relicIs('blacklantern'))m*=0.85;
+  let exec=false;
+  if(enemy&&enemy.hp/enemy.maxHp<0.3&&hasAffix('executioner')){m*=1.35;exec=true;}
+  return{m,exec};
+}
+function damageTakenMult(){
+  let m=1;
+  if(hasAffix('fortress'))m*=0.85;
+  if(hasAffix('glasscannon'))m*=1.15;
+  if(relicIs('glassidol'))m*=1.15;
+  return m;
+}
+
+// ─── SELL / REPAIR VALUE ─────────────────────────────────────
+function sellValue(item){
+  const rar=RARITIES.find(r=>r.id===item.rarity);
+  const durPct=item.durability/item.durMax;
+  if(item.durability<=0)return Math.max(1,Math.round(rar.shard_base*0.1)); // Broken: scrap value
+  let base=rar.shard_base*(0.3+0.7*durPct);
+  base*=1+0.25*(item.reinforce||0);
+  if(relicIs('vulturecoin'))base*=1.5;
+  return Math.max(1,Math.round(base));
+}
+
+function repairCost(item){
+  const dmgPct=1-item.durability/item.durMax;
+  const rarIdx=RAR_IDX[item.rarity];
+  let cost=(rarIdx+1)*8*dmgPct;
+  cost*=1+0.25*(item.reinforce||0);
+  if(relicIs('clockwork'))cost*=1.5;
+  if(relicIs('vulturecoin'))cost*=1.25;
+  if(relicIs('whetstone')&&item.slot==='Weapon')cost*=1.2;
+  return Math.max(1,Math.round(cost));
+}
+
+// ─── ITEM GENERATION (V2: structure + weighted material/affixes) ──
+function pickMaterialWeighted(){
+  const dom=G.factions?G.factions.dominant:null;
+  const sec=G.factions?G.factions.secondary:null;
+  const counter=new Set();
+  if(dom)dom.types.forEach(t=>(TYPE_CHART[t]?.weak||[]).forEach(m=>counter.add(m)));
+  return RNG.pickW(MATERIALS.map(m=>{
+    let w=10;
+    if(dom&&dom.mats.includes(m.id))w*=1.5;
+    else if(sec&&sec.mats.includes(m.id))w*=1.25;
+    if(counter.has(m.id))w*=1.25; // counter-materials vs dominant faction
+    return{val:m,w};
+  }));
+}
+
+function pickAffixes(slot,structure,rarity){
+  const tagCounts=countBuildTags();
+  const worn=equippedAffixIds();
+  const dom=G.factions?G.factions.dominant:null;
+  const relicTags=G.relic?G.relic.tags:[];
+  let pool=ALL_ATTRIBUTES.filter(a=>a.slots.includes(slot));
+  let count=rarity.attrCount+(RNG.chance(20)?1:0);
+  count=Math.min(count,AFFIX_CAP[rarity.id]);
+  const attrs=[];
+  for(let i=0;i<count&&pool.length>0;i++){
+    const weighted=pool.map(a=>{
+      let w=a.w||10;
+      if(structure.favor.includes(a.id))w*=1.6;
+      if(a.tags.some(t=>(tagCounts[t]||0)>=2))w*=1.25;
+      if(dom&&dom.affixes.includes(a.id))w*=1.2;
+      if(a.tags.some(t=>relicTags.includes(t)))w*=1.2;
+      if(worn.has(a.id))w*=0.5;
+      return{val:a,w};
+    });
+    const chosen=RNG.pickW(weighted);
+    attrs.push(chosen.id);
+    pool=pool.filter(a=>a.id!==chosen.id);
+  }
+  return attrs;
+}
+
+function genItemName(slot,mat,structure,attrs){
+  const pre=(slot==='Weapon'||slot==='Amulet')?RNG.pick(WEAPON_PREFIXES)+' ':'';
+  let suf='';
+  if(attrs.length>0&&RNG.chance(40)){
+    const t=(ATTR[attrs[0]]?.tags||[])[0];
+    if(t&&SUFFIX_BY_TAG[t])suf=' '+SUFFIX_BY_TAG[t];
+  }
+  return`${pre}${mat.name} ${structure.id}${suf}`;
+}
+
+function generateItem(floor){
+  const rarity=RNG.pickW(RARITIES.map(r=>({val:r,w:r.w})));
+  const mat=pickMaterialWeighted();
+  const slot=RNG.pick(SLOTS);
+  const st=RNG.pick(STRUCTURES[slot]);
+  const scale=1+(floor-1)*0.15;
+  const sm=rarity.statMult*scale;
+  const stats={};
+  if(slot==='Weapon'){
+    const varR=st.varR||0;
+    stats.atk=Math.max(1,Math.round(RNG.rand(4-varR>1?4-varR:2,10+varR)*sm*mat.atk*(st.atkM||1)));
+    if(RNG.chance(40))stats.spd =Math.round(RNG.rand(1,5)*sm);
+    if(RNG.chance(30))stats.crit=Math.round(RNG.rand(2,8)*sm);
+  }else if(slot==='Armor'){
+    stats.def=Math.max(1,Math.round(RNG.rand(3,9)*sm*mat.def*(st.defM||1)));
+    if(RNG.chance(40))stats.hp =Math.round(RNG.rand(5,15)*sm);
+    if(RNG.chance(20))stats.spd=Math.round(RNG.rand(-3,2)*sm);
+  }else if(slot==='Helmet'){
+    stats.def=Math.max(1,Math.round(RNG.rand(1,5)*sm*mat.def*(st.defM||1)));
+    stats.hp =Math.round(RNG.rand(3,10)*sm);
+    if(RNG.chance(30))stats.crit=Math.round(RNG.rand(1,5)*sm);
+  }else if(slot==='Boots'){
+    stats.spd  =Math.max(1,Math.round(RNG.rand(2,8)*sm*(st.spdM||1)));
+    stats.dodge=Math.max(1,Math.round(RNG.rand(2,6)*sm*(st.dodgeM||1)));
+    if(RNG.chance(25)||st.defF)stats.def=Math.round(RNG.rand(1,4)*sm*mat.def)+(st.defF||0);
+  }else{
+    const opts=['atk','def','hp','spd','crit','dodge'];
+    const picks=RNG.rand(1,3);
+    for(let i=0;i<picks;i++){const s2=RNG.pick(opts);stats[s2]=(stats[s2]||0)+Math.round(RNG.rand(2,8)*sm);}
+  }
+  // structure flat adjustments
+  if(st.spdF)  stats.spd  =(stats.spd  ||0)+st.spdF;
+  if(st.critF) stats.crit =(stats.crit ||0)+st.critF;
+  if(st.dodgeF)stats.dodge=(stats.dodge||0)+st.dodgeF;
+  if(st.hpF)   stats.hp   =(stats.hp   ||0)+st.hpF;
+  // clean zero/neg where nonsensical (keep negative spd for heavy structures)
+  for(const k of Object.keys(stats)){if(stats[k]===0)delete stats[k];}
+  const attrs=pickAffixes(slot,st,rarity);
+  const durMax=Math.max(6,rarity.durMax+(st.durMod||0));
+  const dur=attrs.includes('brittle')?Math.ceil(durMax/2):durMax;
+  return{id:Math.random().toString(36).slice(2),name:genItemName(slot,mat,st,attrs),slot,structure:st.id,rarity:rarity.id,material:mat.id,stats,attrs,durability:dur,durMax,reinforce:0};
+}
+
+function structOf(item){
+  if(!item.structure)return null;
+  return(STRUCTURES[item.slot]||[]).find(s=>s.id===item.structure)||null;
+}
+
+// Durability profile label for cards
+function durProfile(item){
+  if(item.durability<=0)return{label:'BROKEN',color:'#c84040'};
+  if(item.attrs.includes('soulbound'))return{label:'RELIABLE',color:'#4ac870'};
+  if(item.attrs.includes('unstable')||item.attrs.includes('brittle'))return{label:'VOLATILE',color:'#c87040'};
+  if(item.durMax<=12)return{label:'FRAGILE',color:'#c8a84b'};
+  if(item.durMax>=24)return{label:'RELIABLE',color:'#4ac870'};
+  return null;
+}
+
+// ─── ENEMY / BOSS GENERATION ─────────────────────────────────
+function pickRunFaction(){
+  return RNG.pickW([
+    {val:G.factions.dominant,w:55},
+    {val:G.factions.secondary,w:30},
+    {val:G.factions.rare,w:15},
+  ]);
+}
+
+function spawnEnemy(floor){
+  if(floor%5===0)return generateBoss(floor);
+  const fac=pickRunFaction();
+  const pool=ENEMY_TEMPLATES.filter(t=>fac.types.includes(t.type));
+  const tmpl=pool.length?RNG.pick(pool):RNG.pick(ENEMY_TEMPLATES);
+  // Ease-in: floors 1-3 scale more gently, then normal ramp
+  const scaledFloor=floor<=3?1+(floor-1)*0.08:1+(floor-1)*0.18;
+  const scale=scaledFloor;
+  const abil=[];
+  const numAbil=RNG.rand(0,1);
+  const apool=[...ENEMY_ABILITIES];
+  for(let i=0;i<numAbil&&apool.length;i++){const idx=Math.floor(Math.random()*apool.length);abil.push(apool[idx]);apool.splice(idx,1);}
+  const def=Math.round(tmpl.def*scale);
+  return{name:tmpl.name,type:tmpl.type,faction:fac.id,hp:Math.round(tmpl.hp*scale),maxHp:Math.round(tmpl.hp*scale),
+    atk:Math.round(tmpl.atk*scale),def,def0:def,corrosion:0,spd:tmpl.spd,
+    abilities:abil,shards:RNG.rand(...tmpl.shards),isBoss:false,status:[],rage:0,turn:0};
+}
+
+function generateBoss(floor){
+  const fac=pickRunFaction();
+  const race=RNG.pick(fac.types);
+  const arch=RNG.pickW(BOSS_ARCHETYPES.map(a=>({val:a,w:fac.bossArch.includes(a.id)?3:1})));
+  // avoid a power that duplicates the archetype's mechanic
+  const redundant={berserker:'ashtyranny',reflector:'mirrorshell',regenerator:'silentrenewal'};
+  const power=RNG.pick(BOSS_POWERS.filter(p=>p.id!==redundant[arch.id]));
+  const scale=1+(floor-1)*0.18;
+  const base={hp:110,atk:15,def:8,spd:7};
+  let hp=Math.round(base.hp*arch.hpM*scale);
+  if(relicIs('brokencrown'))hp=Math.round(hp*1.3);
+  const def=Math.round(base.def*arch.defM*scale);
+  const abil=[];
+  if(arch.id==='assassin')abil.push(ENEMY_ABILITIES.find(a=>a.id==='double_strike'));
+  const apool=ENEMY_ABILITIES.filter(a=>!abil.includes(a));
+  abil.push(RNG.pick(apool));
+  const name=`The ${RNG.pick(BOSS_ADJ[race]||['Nameless'])} ${arch.title}`;
+  return{name,type:race,faction:fac.id,hp,maxHp:hp,
+    atk:Math.round(base.atk*arch.atkM*scale),def,def0:def,corrosion:0,
+    spd:base.spd+(arch.spdF||0),
+    abilities:abil,shards:RNG.rand(Math.round(15+floor),Math.round(25+floor*1.2)),
+    isBoss:true,status:[],rage:0,turn:0,
+    arch:arch.id,archName:arch.name,archTele:arch.tele,
+    power:power.id,powerName:power.name,powerTele:power.tele,
+    shifted:false,lastOathUsed:false};
+}
+
+function enemyReflectsCrit(e){return e&&e.isBoss&&(e.arch==='reflector'||e.power==='mirrorshell');}
+function enemyEffDef(){return Math.max(0,G.enemy.def-(G.enemy.corrosion||0));}
+
+function calcMatchup(materialId,enemyType){
+  const chart=TYPE_CHART[enemyType];
+  if(!chart)return{mult:1,label:'',color:''};
+  if(chart.immune.includes(materialId))  return{mult:0.1,label:'IMMUNE',  color:'#c84040'};
+  if(chart.weak.includes(materialId))    return{mult:1.5,label:'WEAKNESS',color:'#4ac870'};
+  if(chart.resist.includes(materialId))  return{mult:0.6,label:'RESISTS', color:'#c87040'};
+  return{mult:1,label:'NEUTRAL',color:'#5a6a7a'};
+}
+function getWeaponMatchup(){
+  const w=G.equipment.Weapon;
+  if(!w||!G.enemy)return{mult:1,label:'NEUTRAL',color:'#5a6a7a'};
+  return calcMatchup(w.material,G.enemy.type);
+}
+
+// ─── COMBAT ──────────────────────────────────────────────────
+
+
+// Per-type attack personality: how the enemy moves when it strikes
+const ATTACK_ANIM={
+  undead:   {dist:14,speed:0.05, kind:'lunge'}, // slow, inexorable advance
+  demon:    {dist:26,speed:0.11, kind:'lunge', slash:'#e06030'},
+  golem:    {dist:16,speed:0.055,kind:'stomp', dust:true},
+  construct:{dist:16,speed:0.06, kind:'stomp', dust:true},
+  spirit:   {dist:20,speed:0.08, kind:'fade'},
+  beast:    {dist:34,speed:0.13, kind:'lunge'},
+  fungal:   {dist:0, speed:0.07, kind:'lunge', spores:true},
+  abyssal:  {dist:22,speed:0.09, kind:'warp',  slash:'#9a60c8'},
+};
+function playEnemyAttackAnim(e){
+  const a=ATTACK_ANIM[e.type]||ATTACK_ANIM.undead;
+  if(a.dist>0)fxLunge('enemy',a.dist,a.speed,a.kind);
+  if(a.slash)fxSlash('player',a.slash,2);
+  if(a.dust)fxBurstDir('player','#8a8070',6,0.6,2.2);
+  if(a.spores)fxBeam('enemy','player','#70c040',6);
+}
+
+function playerGuard(){
+  if(!G.combat.active||G.combat.processing)return;
+  if(G.player.status.some(s=>s.id==='stun')){log(`You are stunned — cannot guard!`,'warn');return;}
+  G.combat.processing=true;
+  disableActions(true);
+  G.combat.guard=true;
+  log(`> You brace behind your guard.`,'system');
+  fxRing('player','#4a90c8');
+  updateUI();
+  setTimeout(()=>enemyTurn(),450);
+}
+
+function playerAttack(){
+  if(!G.combat.active||G.combat.processing)return;
+  G.combat.processing=true;
+  disableActions(true);
+  fxLunge('player',26,0.12);
+
+  const ps=getPlayerStats();
+  const e=G.enemy;
+  const wep=G.equipment.Weapon;
+  const wAttrs=wep?activeAttrs(wep):[]; // capture BEFORE wear
+
+  let tenBonus=false;
+  if(G.player.hp/ps.maxHp<0.3&&hasAffix('tenacious'))tenBonus=true;
+
+  const matchup=getWeaponMatchup();
+  const dd=directDamageInfo(e);
+  const defFactor=wAttrs.includes('piercing')?0.25:0.5;
+  let dmg=Math.max(1,Math.round(ps.atk*(tenBonus?1.3:1)*matchup.mult*dd.m - enemyEffDef()*defFactor + RNG.rand(-3,3)));
+
+  if(G.combat.momentum){
+    dmg=Math.round(dmg*1.3);
+    G.combat.momentum=false;
+    log(`  Momentum: strike empowered (+30%).`,'player');
+  }
+
+  let isCrit=RNG.chance(ps.crit+(tenBonus?10:0));
+  if(isCrit){
+    const critMult=wAttrs.includes('unstable')?2.5:1.8;
+    dmg=Math.round(dmg*critMult);
+  }
+
+  // Last Oath: the boss negates one hit while below 25% HP
+  if(e.isBoss&&e.power==='lastoath'&&!e.lastOathUsed&&e.hp/e.maxHp<0.25){
+    e.lastOathUsed=true;
+    log(`  Last Oath: a final ward absorbs your strike!`,'warn');
+    fxRing('enemy','#c8a84b');fxFlash('enemy','rgba(200,168,75,0.55)');fxDamage('enemy','WARDED','#c8a84b',true);
+    combatAnim.shake=8;combatAnim.shakeTarget='enemy';
+    dmg=0;
+  }
+
+  e.hp=Math.max(0,e.hp-dmg);
+  if(dmg>0){
+    const cls=isCrit?'crit':'player';
+    const matchStr=matchup.mult>1?' [WEAKNESS x1.5]':matchup.mult<0.15?' [IMMUNE]':matchup.mult<1?' [RESISTS]':'';
+    log(`> You strike for ${dmg}${isCrit?' (CRITICAL)':''}${matchStr} damage.`,cls);
+    if(dd.exec)log(`  Executioner: +35% vs weakened foe.`,'player');
+    fxDamage('enemy',dmg,isCrit?'#ff6060':'#e0e8f0',isCrit);
+    fxBurst('enemy',isCrit?'#ff6060':'#c8a84b',isCrit?16:9);
+    if(isCrit)fxSlash('enemy','#e0c060',3);
+    fxFlash('enemy');
+    combatAnim.shake=isCrit?7:2.5;combatAnim.shakeTarget='enemy';
+    if(isCrit)FX.freeze=6;
+  }else{
+    fxDamage('enemy','IMMUNE','#5a6a7a');
+  }
+
+  // Crit reflection (Reflector archetype / Mirror Shell power)
+  if(isCrit&&dmg>0&&enemyReflectsCrit(e)){
+    const ref=Math.max(1,Math.round(dmg*0.25));
+    G.player.hp=Math.max(0,G.player.hp-ref);
+    log(`  Mirror Shell: ${ref} crit damage reflected back at you!`,'enemy');
+    fxRing('enemy','#c0a0e0');fxFlash('enemy','rgba(192,160,224,0.5)');fxBeam('enemy','player','#c0a0e0');
+  }
+
+  // Berserker / Ash Tyranny rage stacks
+  if(dmg>0&&e.isBoss&&(e.arch==='berserker'||e.power==='ashtyranny')){
+    const inc=e.arch==='berserker'?0.08:0.10;
+    const prev=e.rage;
+    e.rage=Math.min(0.5,e.rage+inc);
+    if(e.rage>prev){log(`  ${e.name} grows stronger (+${Math.round(e.rage*100)}% ATK).`,'warn');fxRing('enemy','#e06030');}
+  }
+
+  // Vampiric heal (visible immediately)
+  if(wAttrs.includes('vampiric')&&dmg>0){
+    const hpBefore=G.player.hp;
+    const steal=Math.max(1,Math.round(dmg*0.08));
+    const _vb=G.player.hp;
+    G.player.hp=Math.min(ps.maxHp,G.player.hp+steal);
+    if(G.player.hp>_vb){fxDamage('player','+'+(G.player.hp-_vb),'#c060a0','tick');fxBeam('enemy','player','#c060a0');}
+    const gained=G.player.hp-hpBefore;
+    if(gained>0){
+      log(`  Vampiric: +${gained} HP restored.`,'loot');
+      document.getElementById('playerHpVal').textContent=`${G.player.hp} / ${ps.maxHp}`;
+      document.getElementById('playerHpBar').style.width=Math.max(0,(G.player.hp/ps.maxHp)*100)+'%';
+    }
+  }
+
+  // Status procs
+  if(wAttrs.includes('serrated')&&RNG.chance(15))applyBleedProc();
+  if(wAttrs.includes('venom')   &&RNG.chance(20))applyStatus('enemy','poison',4);
+  if(wAttrs.includes('igniting')&&RNG.chance(10))applyStatus('enemy','burn',3);
+
+  // Durability wear AFTER effects (Whetstone Oath halves weapon wear)
+  if(wep&&!wAttrs.includes('soulbound')){
+    let loss=(wAttrs.includes('unstable')&&isCrit)?3:RNG.rand(1,2);
+    if(relicIs('whetstone')){
+      const saved=loss-Math.floor(loss/2);
+      loss=Math.floor(loss/2);
+      if(saved>0&&!G.combat.whetLogged){G.combat.whetLogged=true;log(`[Relic] Whetstone Oath: weapon wear halved.`,'system');}
+    }
+    if(loss>0)wearItem(wep,loss,'Weapon');
+  }
+
+  // Mirror Shell may have downed the player
+  if(G.player.hp<=0){if(checkPlayerDown())return;}
+
+  if(e.hp<=0){setTimeout(()=>combatVictory(),400);return;}
+
+  if(e.abilities.some(a=>a&&a.id==='double_strike')&&RNG.chance(15)){
+    setTimeout(()=>{log(`${e.name} uses Double Strike!`,'enemy');enemyTurn();},500);
+  }else{
+    setTimeout(()=>enemyTurn(),500);
+  }
+}
+
+// Serrated + Hemorrhage interplay: re-applying bleed intensifies it
+function applyBleedProc(){
+  const e=G.enemy;
+  const existing=e.status.find(s=>s.id==='bleed');
+  if(existing&&hasAffix('hemorrhage')){
+    const cap=e.isBoss?8:10;
+    if(existing.power<cap){
+      existing.power++;
+      log(`  Hemorrhage: Bleed intensifies to ${existing.power}.`,'player');
+      fxRing('enemy','#c84060');
+    }
+    existing.dur=Math.max(existing.dur,3);
+  }else{
+    applyStatus('enemy','bleed',3);
+  }
+}
+
+function checkPlayerDown(){
+  if(G.player.hp>0)return false;
+  if(relicIs('clockwork')&&!G.reviveUsed){
+    G.reviveUsed=true;
+    G.player.hp=Math.max(1,Math.round(getPlayerStats().maxHp*0.4));
+    log(`[Relic] Clockwork Heart shatters — you rise again at ${G.player.hp} HP!`,'system');
+    fxDamage('player','REVIVED','#c8a84b',true);fxBurst('player','#c8a84b',24,3.5);
+    updateUI();
+    return false;
+  }
+  combatDefeat();
+  return true;
+}
+
+function enemyTurn(){
+  const e=G.enemy;
+  const ps=getPlayerStats();
+  e.turn++;
+
+  tickStatuses('player');
+  if(G.player.hp<=0){if(checkPlayerDown())return;}
+
+  const stunned=e.status.some(s=>s.id==='stun');
+  if(!stunned&&G.combat.active)playEnemyAttackAnim(e);
+  if(stunned){
+    log(`${e.name} is stunned — cannot act!`,'system');
+    e.status=e.status.map(s=>s.id==='stun'?{...s,dur:s.dur-1}:s).filter(s=>s.dur>0);
+    endTurn();return;
+  }
+
+  tickStatuses('enemy');
+  if(e.hp<=0){combatVictory();return;}
+
+  // Boss periodic powers
+  if(e.isBoss){
+    if(e.arch==='regenerator'&&e.turn%4===0&&e.hp<e.maxHp){
+      const h=Math.max(1,Math.round(e.maxHp*0.08));
+      e.hp=Math.min(e.maxHp,e.hp+h);
+      log(`${e.name} knits its wounds (+${h} HP).`,'warn');
+      fxDamage('enemy','+'+h,'#4ac870','tick');fxRing('enemy','#4ac870',true);
+    }
+    if(e.power==='silentrenewal'&&e.turn%5===0&&e.hp<e.maxHp){
+      const h=Math.max(1,Math.round(e.maxHp*0.10));
+      e.hp=Math.min(e.maxHp,e.hp+h);
+      log(`Silent Renewal: ${e.name} regenerates ${h} HP.`,'warn');
+      fxDamage('enemy','+'+h,'#4ac870','tick');fxRing('enemy','#4ac870',true);
+    }
+    if(e.power==='veilshift'&&!e.shifted&&e.hp/e.maxHp<=0.5){
+      e.shifted=true;
+      e.def=Math.round(e.def*1.3);
+      log(`Veil Shift: its form hardens (+30% DEF).`,'warn');
+      fxFlash('enemy','rgba(140,170,220,0.5)');fxRing('enemy','#8aaadc');
+    }
+  }
+
+  // Dodge (Bone Lock constrains movement while boss is healthy)
+  let effDodge=ps.dodge;
+  if(e.isBoss&&e.power==='bonelock'&&e.hp/e.maxHp>0.5)effDodge=Math.max(0,effDodge-15);
+  if(RNG.chance(effDodge)){
+    log(`${e.name} attacks — you dodge!`,'system');
+    fxDamage('player','DODGE','#60c0e0');
+    fxDodge('player');fxBurstDir('player','#60c0e0',4,-0.4,2);
+    if(hasAffix('momentum')&&!G.combat.momentum){
+      G.combat.momentum=true;
+      log(`  Momentum: next strike empowered.`,'system');
+    }
+    if(hasAffix('shadowstep')&&!G.combat.shadowUsed){
+      G.combat.shadowUsed=true;
+      const cd=Math.max(1,Math.round(ps.atk*0.4));
+      e.hp=Math.max(0,e.hp-cd);
+      log(`  Shadowstep: counter for ${cd} damage!`,'player');
+      fxDamage('enemy',cd,'#9a60c8');fxBurst('enemy','#9a60c8',10);fxDodge('player');
+      if(e.hp<=0){combatVictory();return;}
+    }
+    endTurn();return;
+  }
+
+  // Warded
+  let wardActive=false;
+  if(!G.combat.wardUsed&&hasAffix('warded')){wardActive=true;G.combat.wardUsed=true;}
+
+  const atkEff=Math.round(e.atk*(1+(e.rage||0)));
+  let rawDmg=Math.max(1,Math.round(atkEff-ps.def*0.5+RNG.rand(-2,3)));
+  rawDmg=Math.max(1,Math.round(rawDmg*damageTakenMult()));
+  if(G.combat.guard){
+    rawDmg=Math.max(1,Math.round(rawDmg*0.6));
+    log(`  Guard: the blow is blunted (-40%).`,'system');
+    fxDamage('player','GUARDED','#4a90c8');
+  }
+  if(e.isBoss&&relicIs('silentbell')&&!G.combat.bellUsed){
+    G.combat.bellUsed=true;
+    rawDmg=Math.max(1,Math.round(rawDmg*0.5));
+    log(`[Relic] Silent Bell: the first blow is muffled (-50%).`,'system');
+  }
+  if(wardActive){
+    log(`${e.name} attacks — your ward negates the blow!`,'system');rawDmg=0;
+    fxDamage('player','WARDED','#c8a84b');
+    fxRing('player','#c8a84b');
+  }
+  else{
+    G.player.hp=Math.max(0,G.player.hp-rawDmg);
+    log(`${e.name} deals ${rawDmg} damage.`,'enemy');
+    fxDamage('player',rawDmg,'#e05050');
+    fxBurst('player','#c84040',8);
+    fxFlash('player','rgba(200,60,60,0.4)');
+    combatAnim.shake=G.combat.guard?1.5:3;combatAnim.shakeTarget='player';
+  }
+
+  if(rawDmg>0){
+    if(hasAffix('spiked')){
+      const rd=Math.max(1,Math.round(rawDmg*0.15));
+      e.hp=Math.max(0,e.hp-rd);
+      log(`  Spiked: reflected ${rd} damage.`,'player');
+    }
+    if(hasAffix('reactive')&&RNG.chance(30)){
+      const cd=Math.max(1,Math.round(ps.atk*0.5));
+      e.hp=Math.max(0,e.hp-cd);
+      log(`  Reactive: counter-attack for ${cd} damage!`,'player');
+    }
+    // Armor wear (halved while guarding)
+    const armor=G.equipment.Armor;
+    if(armor&&!activeAttrs(armor).includes('soulbound')){
+      let aw=RNG.rand(1,Math.max(1,Math.floor(rawDmg/8)));
+      if(G.combat.guard)aw=Math.floor(aw/2);
+      if(aw>0)wearItem(armor,aw,'Armor');
+    }
+    // Iron Tax: gear strains under the boss's aura
+    if(e.isBoss&&e.power==='irontax'){
+      let taxed=false;
+      ['Boots','Amulet'].forEach(sl=>{
+        const it=G.equipment[sl];
+        if(it&&!activeAttrs(it).includes('soulbound')&&it.durability>0){wearItem(it,1,sl);taxed=true;fxBurstDir('player','#a0a8b0',3,0.5,1.5);}
+      });
+      if(taxed)log(`  Iron Tax: your gear strains under its aura.`,'warn');
+    }
+    // Hexer: cursed blows
+    if(e.isBoss&&e.arch==='hexer'&&RNG.chance(30)){
+      const hex=RNG.pick(['poison','burn','bleed']);
+      applyStatus('player',hex,3);
+      log(`  The Cantor's blow carries a curse: ${hex}!`,'enemy');
+    }
+  }
+
+  // Enemy abilities
+  for(const ab of e.abilities){
+    if(!ab)continue;
+    if(RNG.chance(ab.chance)){
+      if(ab.effect==='poison'){applyStatus('player','poison',3);fxBurstDir('player','#70c040',7,-0.8,1.8);}
+      if(ab.effect==='burn'){applyStatus('player','burn',3);fxSlash('player','#e0a040',2);fxBurstDir('player','#e0a040',5,-0.5,2.4);}
+      if(ab.effect==='stun'){applyStatus('player','stun',1);fxFlash('player','rgba(240,220,120,0.55)');fxDamage('player','STUNNED','#e0d878');}
+      if(ab.effect==='bleed'){applyStatus('player','bleed',3);fxSlash('player','#c84060',2);fxBurstDir('player','#c84060',6,1,1.4);}
+      if(ab.effect==='drain'){
+        const d=Math.max(1,Math.round(e.atk*0.3));
+        e.hp=Math.min(e.maxHp,e.hp+d);
+        G.player.hp=Math.max(0,G.player.hp-d);
+        log(`${e.name} drains ${d} HP!`,'enemy');
+        fxDamage('player',d,'#c060a0');fxDamage('enemy','+'+d,'#c060a0','tick');fxBeam('player','enemy','#9a60c8');
+      }
+      if(ab.effect!=='drain')log(`${e.name} uses ${ab.name}!`,'enemy');
+    }
+  }
+
+  if(G.player.hp<=0){if(checkPlayerDown())return;}
+  if(e.hp<=0){combatVictory();return;}
+  endTurn();
+}
+
+function endTurn(){
+  G.combat.guard=false;
+  // Regenerative: stacks capped at 8 HP/turn, single log line
+  let regenCount=0;
+  for(const slot of SLOTS){
+    const it=G.equipment[slot];
+    if(it&&activeAttrs(it).includes('regenerative'))regenCount++;
+  }
+  if(regenCount>0){
+    const heal=Math.min(8,4*regenCount);
+    const cap=getPlayerStats().maxHp;
+    const before=G.player.hp;
+    G.player.hp=Math.min(cap,G.player.hp+heal);
+    if(G.player.hp>before){log(`  Regenerative: restored ${G.player.hp-before} HP.`,'system');fxDamage('player','+'+(G.player.hp-before),'#4ac870','tick');}
+  }
+  ['Boots','Amulet'].forEach(sl=>{
+    const it=G.equipment[sl];
+    if(it&&!activeAttrs(it).includes('soulbound')&&it.durability>0)wearItem(it,1,sl);
+  });
+  updateUI();
+  G.combat.processing=false;
+  disableActions(false);
+}
+
+function tickStatuses(target){
+  const obj=target==='player'?G.player:G.enemy;
+  const name=target==='player'?'You':G.enemy.name;
+  const blessed=target==='player'&&hasAffix('blessed');
+  obj.status=obj.status.filter(s=>{
+    const isPlayer=target==='player';
+    if(['poison','burn','bleed'].includes(s.id)){
+      if(isPlayer&&blessed){log(`  Blessed: ${s.id} resisted.`,'system');fxRing('player','#c8a84b',true);return false;}
+      const d=s.power||{poison:5,burn:6,bleed:4}[s.id]||5;
+      if(isPlayer)G.player.hp=Math.max(0,G.player.hp-d);
+      else G.enemy.hp=Math.max(0,G.enemy.hp-d);
+      const verb={poison:'takes poison damage',burn:'burns for',bleed:'bleeds for'}[s.id];
+      log(`  ${name} ${verb} ${d}.`,isPlayer?'enemy':'player');
+      const tgt=isPlayer?'player':'enemy';
+      fxDamage(tgt,d,STATUS_FX_COLOR[s.id]||'#c8c8c8','tick');
+      if(s.id==='bleed')fxBurstDir(tgt,'#c84060',4,1);        // drops fall
+      else if(s.id==='poison')fxBurstDir(tgt,'#70c040',4,-1); // smoke rises
+      else fxBurstDir(tgt,'#e0a040',5,-0.5,2.4);              // burn sparks
+      if(!isPlayer){
+        // Blood Feast: enemy suffering feeds you
+        if(s.id==='bleed'&&hasAffix('bloodfeast')){
+          const heal=Math.min(4,Math.max(1,Math.round(d*0.4)));
+          const cap=getPlayerStats().maxHp;
+          const before=G.player.hp;
+          G.player.hp=Math.min(cap,G.player.hp+heal);
+          if(G.player.hp>before){log(`  Blood Feast: +${G.player.hp-before} HP.`,'loot');fxDamage('player','+'+(G.player.hp-before),'#4ac870','tick');fxBeam('enemy','player','#c84060');}
+        }
+        // Corrosion: poison shreds enemy DEF, capped
+        if(s.id==='poison'&&hasAffix('corrosion')){
+          const e=G.enemy;
+          const cap=Math.floor(e.def0*(e.isBoss?0.25:0.4));
+          if((e.corrosion||0)<cap){
+            e.corrosion=(e.corrosion||0)+1;
+            log(`  Corrosion: enemy DEF reduced (-${e.corrosion}).`,'player');
+          }
+        }
+      }
+    }
+    s.dur--;return s.dur>0;
+  });
+}
+
+function applyStatus(target,id,dur,power){
+  const obj=target==='player'?G.player:G.enemy;
+  if(target==='player'&&hasAffix('blessed'))return;
+  // Plague Aura: statuses on the player linger longer
+  if(target==='player'&&G.enemy&&G.enemy.isBoss&&G.enemy.power==='plagueaura'&&id!=='stun'){
+    dur+=1;
+  }
+  const existing=obj.status.find(s=>s.id===id);
+  if(existing)existing.dur=Math.max(existing.dur,dur);
+  else obj.status.push({id,dur,power:power||{poison:5,burn:6,bleed:4,stun:1,regen:4}[id]||5});
+}
+
+function wearItem(item,amount,slotLabel){
+  if(!item)return;
+  const prevPct=item.durability/item.durMax;
+  item.durability=Math.max(0,item.durability-amount);
+  const newPct=item.durability/item.durMax;
+  if(item.durability===0&&prevPct>0){
+    log(`  [!!] ${item.name} is BROKEN — all stats and affixes lost until repaired.`,'warn');
+    fxDamage('player','BROKEN','#c84040',true);
+    fxBurst('player','#909090',14,2.8);
+    combatAnim.shake=8;combatAnim.shakeTarget='player';
+    G._brokenPulse={slot:slotLabel,at:Date.now()};
+  } else if(newPct<=0.1&&prevPct>0.1){
+    log(`  [!] ${item.name} critical (${item.durability}/${item.durMax}) — -60% stats, only first affix active.`,'warn');
+  } else if(newPct<=0.25&&prevPct>0.25){
+    const lostAttr=item.attrs.length>1?ATTR[item.attrs[item.attrs.length-1]]?.name:'';
+    log(`  [!] ${item.name} heavily damaged (${item.durability}/${item.durMax}) — -30% stats${lostAttr?', '+lostAttr+' inactive':''}.`,'warn');
+  } else if(newPct<=0.5&&prevPct>0.5){
+    log(`  [!] ${item.name} damaged (${item.durability}/${item.durMax}) — -10% stats.`,'warn');
+  }
+}
+
+// ─── COMBAT VICTORY / DEFEAT ─────────────────────────────────
+function combatVictory(){
+  G.combat.active=false;G.kills++;G._lootShown=false;
+  const e=G.enemy;
+  if(e.isBoss)G.bossKills++;
+  let shards=e.shards;
+  if(!e.isBoss&&relicIs('silentbell'))shards=Math.max(1,Math.round(shards*0.8));
+  G.shards+=shards;
+  e.shardsAwarded=shards;
+  log(`─────────────────────────`,'system');
+  log(`${e.name} defeated! +${shards} Shards`,'loot');
+
+  // Carry-over: death while afflicted feeds the next fight (V2)
+  const extra=relicIs('gravebloom')?1:0;
+  if(extra&&(hasAffix('bloodburst')||hasAffix('toxicbloom')))log(`[Relic] Grave Bloom: your carry-over lingers +1 turn.`,'system');
+  if(e.status.some(s=>s.id==='bleed')&&hasAffix('bloodburst')){
+    G.carryOver.bleed={power:3,dur:2+extra};
+    log(`Blood Explosion: the wound will follow into the next fight.`,'loot');
+  }
+  if(e.status.some(s=>s.id==='poison')&&hasAffix('toxicbloom')){
+    G.carryOver.poison={power:3,dur:2+extra};
+    log(`Toxic Bloom: spores cling to the veil — the next foe will be poisoned.`,'loot');
+  }
+
+  if(e.isBoss&&relicIs('brokencrown'))log(`[Relic] Broken Crown: +1 boss loot.`,'loot');
+  // Spoils were sensed at spawn — the promise is kept (fallback for edge cases)
+  G.lootItems=e.spoils||genSpoils(e,G.floor);
+  G.selectedLoot=null;
+  // Victory ceremony: the foe dissolves, gold rises, then the spoils
+  e.dying=Date.now();
+  fxBurst('enemy','#c8a84b',18,3);
+  fxBurstDir('enemy','#c8a84b',10,-1.2,1);
+  updateUI();
+  setTimeout(()=>showLootOverlay(),650);
+}
+
+// Pre-generated at enemy spawn so rewards can be teased; never affects enemy stats.
+function genSpoils(e,floor){
+  const n=e.isBoss?(relicIs('brokencrown')?4:3):RNG.rand(1,2);
+  const out=[];
+  for(let i=0;i<n;i++){
+    const item=generateItem(floor);
+    if(e.isBoss&&['common','uncommon'].includes(item.rarity)){
+      const r=RNG.pickW(RARITIES.filter(r=>!['common','uncommon'].includes(r.id)).map(r=>({val:r,w:r.w})));
+      item.rarity=r.id;
+    }
+    out.push(item);
+  }
+  return out;
+}
+
+function combatDefeat(){
+  G.combat.active=false;
+  G.carryOver={};
+  saveRun(false);
+  updateUI();
+  setTimeout(()=>{
+    showScreen('gameover');
+    document.getElementById('deathStats').innerHTML=
+      `Floor reached: <span>${G.floor}</span><br>Enemies slain: <span>${G.kills}</span><br>Shards gathered: <span>${G.shards}</span>`+
+      (G.relic?`<br>Relic: <span>${G.relic.name}</span>`:'');
+  },600);
+}
+
+function attemptFlee(){
+  if(!G.combat.active||G.combat.processing)return;
+  const ps=getPlayerStats();
+  const chance=Math.max(20,Math.min(70,40+(ps.spd-G.enemy.spd)*3));
+  if(RNG.chance(chance)){
+    log(`You flee into the dark.`,'system');
+    G.combat.active=false;G.lootItems=[];
+    showLootOverlay(true);
+  }else{
+    log(`Escape failed!`,'warn');
+    G.combat.processing=true;disableActions(true);
+    setTimeout(()=>enemyTurn(),400);
+  }
+}
+
+// ─── FLOOR ───────────────────────────────────────────────────
+function startFloor(){
+  G.combat.wardUsed=false;G.combat.momentum=false;G.combat.shadowUsed=false;G.combat.bellUsed=false;G.combat.whetLogged=false;G.combat.guard=false;
+  G.enemy=spawnEnemy(G.floor);
+  G.enemy.spoils=genSpoils(G.enemy,G.floor);
+  G.enemy.spoilsRevealed=false;
+  G.player.status=[];
+  G.combat.active=true;G.combat.processing=false;
+  const isBoss=G.floor%5===0;
+  const isSmith=G.floor>1&&(G.floor%5===1||G.floor%7===3);
+  clearLog();
+  log(`─── FLOOR ${G.floor}${isBoss?' — BOSS ENCOUNTER':''} ───`,'system');
+  if(isSmith){log(`A forge glows in the corner...`,'system');setTimeout(()=>showSmith(),800);}
+  log(`${G.enemy.name} appears!`,'system');
+  if(isBoss){
+    log(`  [${G.enemy.type.toUpperCase()} — ${G.enemy.archName.toUpperCase()}] ${G.enemy.archTele}`,'warn');
+    log(`  Power — ${G.enemy.powerName}: ${G.enemy.powerTele}`,'warn');
+    fxBanner(G.enemy.name.toUpperCase(),G.enemy.powerName.toUpperCase());
+  }
+  if(G.enemy.abilities.length>0)log(`  Abilities: ${G.enemy.abilities.filter(a=>a).map(a=>a.name).join(', ')}`,'system');
+  log(`  Spoils sensed: ${spoilsSummary(G.enemy,false)}`,'sell');
+
+  // Carry-over statuses (reduced vs bosses)
+  if(G.carryOver.bleed){
+    const c=G.carryOver.bleed;
+    const p=G.enemy.isBoss?Math.max(1,c.power-1):c.power;
+    applyStatus('enemy','bleed',c.dur,p);
+    log(`Carried wound: ${G.enemy.name} starts bleeding (${p}/${c.dur}t) — Blood Explosion.`,'loot');
+    G.carryOver.bleed=null;
+  }
+  if(G.carryOver.poison){
+    const c=G.carryOver.poison;
+    const p=G.enemy.isBoss?Math.max(1,c.power-1):c.power;
+    applyStatus('enemy','poison',c.dur,p);
+    log(`Lingering spores: ${G.enemy.name} starts poisoned (${p}/${c.dur}t) — Toxic Bloom.`,'loot');
+    G.carryOver.poison=null;
+  }
+
+  // Black Lantern relic
+  if(relicIs('blacklantern')){
+    applyStatus('enemy','poison',2);
+    log(`[Relic] Black Lantern: ${G.enemy.name} is seared by pale fire (Poison 2t).`,'loot');
+  }
+
+  // Plague Carrier affix
+  if(hasAffix('plaguecarrier')){
+    const pois=G.enemy.status.find(s=>s.id==='poison');
+    if(pois){
+      pois.dur+=1;
+      log(`Plague Carrier: the poison deepens (+1 turn).`,'loot');
+    }else if(RNG.chance(35)){
+      applyStatus('enemy','poison',2);
+      log(`Plague Carrier: ${G.enemy.name} starts the fight poisoned.`,'loot');
+    }
+  }
+
+  updateUI();disableActions(false);renderCombatCanvas();
+}
+
+function nextFloor(){
+  closeLootOverlay();
+  if(G.lootItems.length){log(`${G.lootItems.length} item${G.lootItems.length>1?'s':''} left behind.`,'system');}
+  G.lootItems=[];G.selectedLoot=null;
+  G.floor++;
+  if(G.floor>G.totalFloors){
+    saveRun(true);
+    showScreen('victory');
+    document.getElementById('victoryStats').innerHTML=
+      `Floors conquered: <span>${G.totalFloors}</span><br>Enemies slain: <span>${G.kills}</span><br>Shards gathered: <span>${G.shards}</span>`+
+      (G.relic?`<br>Relic: <span>${G.relic.name}</span>`:'');
+    return;
+  }
+  startFloor();
+}
+
+// ─── RELIC CHOICE ────────────────────────────────────────────
+
+function renderRunBrief(){
+  const el=document.getElementById('relicRunBrief');if(!el||!G.factions)return;
+  const dom=G.factions.dominant,sec=G.factions.secondary;
+  // Materials that exploit weaknesses of the dominant faction's enemy types
+  const strong=new Set();
+  dom.types.forEach(t=>(TYPE_CHART[t]?.weak||[]).forEach(m=>strong.add(m)));
+  const matsHtml=[...strong].map(m=>{
+    const mat=MAT[m];return mat?`<span style="color:${mat.color}">${mat.name}</span>`:m;
+  }).join(' / ');
+  const enemiesHtml=`<span style="color:${dom.color}">${dom.types.join(', ')}</span> <span style="color:var(--ink-faint)">then</span> ${sec.types.join(', ')}`;
+  const biasHtml=dom.affixes.map(aid=>{
+    const a=ATTR[aid];return a?`<span class="attr-tag" style="color:${a.color};border-color:${a.color}44;">${a.name}</span>`:'';
+  }).join(' ');
+  el.innerHTML=`<div class="run-brief">
+    <div class="run-brief-title">Run Profile</div>
+    <div class="run-brief-row"><span class="rb-label">Dominant</span><span class="rb-val" style="color:${dom.color}">${dom.name}</span><span style="color:var(--ink-faint)">/ ${sec.name}</span></div>
+    <div class="run-brief-row"><span class="rb-label">Likely enemies</span><span class="rb-val">${enemiesHtml}</span></div>
+    <div class="run-brief-row"><span class="rb-label">Valuable materials</span><span class="rb-val">${matsHtml}</span></div>
+    <div class="run-brief-row"><span class="rb-label">Loot bias</span><span class="rb-val">${biasHtml}</span></div>
+  </div>`;
+}
+
+function showRelicChoice(){
+  const overlay=document.getElementById('relic-overlay');
+  overlay.classList.add('active');
+  renderRunBrief();
+  const cont=document.getElementById('relicItems');cont.innerHTML='';
+  const pool=[...RELICS];
+  const picks=[];
+  for(let i=0;i<3&&pool.length;i++){const idx=Math.floor(Math.random()*pool.length);picks.push(pool.splice(idx,1)[0]);}
+  picks.forEach(r=>{
+    const card=document.createElement('div');
+    card.className='relic-card';
+    const chips=r.tags.map(t=>TAGS[t]?`<span class="build-chip" style="color:${TAGS[t].color};border-color:${TAGS[t].color}44;">${TAGS[t].name}</span>`:'').join('');
+    card.innerHTML=`<div class="relic-name">${r.name}</div>
+      <div class="relic-good">+ ${r.good}</div>
+      <div class="relic-bad">&minus; ${r.bad}</div>
+      <div class="item-chips">${chips}</div>`;
+    card.onclick=()=>chooseRelic(r.id);
+    cont.appendChild(card);
+  });
+}
+function chooseRelic(id){
+  G.relic=RELIC_BY_ID[id];
+  document.getElementById('relic-overlay').classList.remove('active');
+  log(`Relic chosen: ${G.relic.name}.`,'system');
+  startFloor();
+}
+
+// ─── LOOT ────────────────────────────────────────────────────
+function showLootOverlay(fleeMode=false){
+  document.getElementById('loot-overlay').classList.add('active');
+  document.getElementById('lootTitle').textContent=fleeMode?'Escaped':G.enemy.isBoss?'Boss Defeated':'Victory';
+  // Prominent shard gain (once per victory, not on re-render)
+  const sub=document.getElementById('lootSubtitle');
+  const gained=G.enemy&&!fleeMode?(G.enemy.shardsAwarded!==undefined?G.enemy.shardsAwarded:G.enemy.shards):0;
+  sub.innerHTML=(G._lootShown||!(gained>0)?'':`<div class="loot-shards-gain">+${gained} <span class="diamond">◆</span> SHARDS</div>`)+
+    (fleeMode?'You slipped away... ':G.lootItems.length?'Click an item to take it — ':'')+
+    `<span class="loot-inv-count">Inventory ${G.inventory.length} / 12</span>`;
+  if(gained>0)G._lootShown=true;
+  const cont=document.getElementById('lootItems');cont.innerHTML='';
+  G.lootItems.forEach((item,i)=>{
+    const card=buildItemCard(item,true);
+    card.onclick=()=>takeLootAt(i,card);
+    cont.appendChild(card);
+  });
+  // Take All: only for 2+ items, hidden if inventory can't hold them
+  const invFree=12-G.inventory.length;
+  const needsInv=G.lootItems.filter(it=>G.equipment[it.slot]).length;
+  const tb=document.getElementById('btnTakeLoot');
+  tb.style.display=G.lootItems.length>1?'':'none';
+  tb.textContent=needsInv>invFree?'Inventory Full':'Take All';
+  tb.disabled=needsInv>invFree;
+  const nb=document.getElementById('btnNextFloor');
+  nb.style.display='';
+  const base=G.floor>=G.totalFloors?'Ascend — Run Complete':'Descend to Next Floor';
+  nb.textContent=G.lootItems.length?base.replace('Descend to Next Floor','Descend — leave remaining loot'):base;
+}
+function closeLootOverlay(){document.getElementById('loot-overlay').classList.remove('active');G._lootShown=false;}
+
+function takeLootAt(i,cardEl){
+  const item=G.lootItems[i];if(!item)return;
+  if(G.equipment[item.slot]&&G.inventory.length>=12){log('Inventory full!','warn');return;}
+  if(cardEl){
+    cardEl.classList.add('taken');
+    setTimeout(()=>{doTakeLoot(i);},180);
+  }else doTakeLoot(i);
+}
+function doTakeLoot(i){
+  const item=G.lootItems[i];if(!item)return;
+  const prev=countBuildTags();
+  const equipped=!G.equipment[item.slot];
+  if(equipped)G.equipment[item.slot]=item;
+  else G.inventory.push(item);
+  log(`Taken: ${item.name}`,'loot');
+  G.lootItems.splice(i,1);G.selectedLoot=null;
+  if(equipped)checkBuildMilestone(prev);
+  showLootOverlay();updateUI();
+}
+// Legacy entry kept for compatibility: takes selected or first
+function takeLoot(){
+  const i=G.selectedLoot!==null?G.selectedLoot:0;
+  takeLootAt(i,null);
+}
+function takeAllLoot(){
+  let guard=0;
+  while(G.lootItems.length&&guard++<10){
+    const item=G.lootItems[0];
+    if(G.equipment[item.slot]&&G.inventory.length>=12){log('Inventory full!','warn');break;}
+    doTakeLoot(0);
+  }
+}
+
+
+
+// ═══════════════════════════════════════════════════════════════
+// FORGE (V2 — tabs: Repair / Sell / Extract / Infuse / Reinforce)
+// ═══════════════════════════════════════════════════════════════
+let smithTab='repair';
+
+function showSmith(){
+  G.forgeConfirm=null;G.essenceSel=null;smithTab='repair';
+  document.getElementById('smith-overlay').classList.add('active');
+  renderSmith();
+}
+function closeSmith(){
+  G.forgeConfirm=null;
+  document.getElementById('smith-overlay').classList.remove('active');
+  updateUI();
+}
+function setSmithTab(tab){
+  smithTab=tab;G.forgeConfirm=null;
+  renderSmith();
+}
+
+// All items with location metadata
+function allForgeItems(){
+  const out=[];
+  SLOTS.forEach(s=>{if(G.equipment[s])out.push({item:G.equipment[s],loc:'Equipped',slot:s});});
+  G.inventory.forEach((it,i)=>out.push({item:it,loc:'Inventory',idx:i}));
+  return out;
+}
+function findItemById(id){
+  for(const s of SLOTS){if(G.equipment[s]&&G.equipment[s].id===id)return{item:G.equipment[s],equippedSlot:s};}
+  const idx=G.inventory.findIndex(it=>it.id===id);
+  if(idx>=0)return{item:G.inventory[idx],invIdx:idx};
+  return null;
+}
+
+function renderSmith(){
+  ['repair','sell','extract','infuse','reinforce'].forEach(t=>{
+    document.getElementById('stab-'+t).classList.toggle('active',t===smithTab);
+  });
+  document.getElementById('smithShards').textContent=`Shards: ${G.shards}`;
+  const c=document.getElementById('smithContent');
+  if(smithTab==='repair')c.innerHTML=renderRepairTab();
+  else if(smithTab==='sell')c.innerHTML=renderSellTab();
+  else if(smithTab==='extract')c.innerHTML=renderExtractTab();
+  else if(smithTab==='infuse')c.innerHTML=renderInfuseTab();
+  else c.innerHTML=renderReinforceTab();
+}
+
+function smithItemLabel(entry){
+  const it=entry.item;
+  const rar=RARITIES.find(r=>r.id===it.rarity);
+  const mat=MAT[it.material];
+  const st=structOf(it);
+  const statsStr=Object.entries(it.stats).map(([k,v])=>`${k.toUpperCase()}${v>=0?'+':''}${v}`).join('  ');
+  const active=activeAttrs(it);
+  const attrsHtml=it.attrs.map(aid=>{
+    const a=ATTR[aid];if(!a)return'';
+    const inactive=!active.includes(aid);
+    return`<span class="attr-tag" style="color:${a.color};border-color:${a.color}44;${inactive?'opacity:0.35;':''}">${a.name}</span>`;
+  }).join('');
+  const durPct=Math.max(0,(it.durability/it.durMax)*100);
+  return`<div class="smith-card-main">
+    <div class="smith-card-name r-${it.rarity}">${structIconSvg(it,16)}${it.name}${(it.reinforce||0)>0?` +${it.reinforce}`:''}${entry.loc==='Equipped'?`<span class="equipped-badge">Equipped</span>`:''}</div>
+    <div class="smith-card-sub">${it.slot} &bull; ${st?st.id+' &bull; ':''}<span style="color:${mat.color}">${mat.name}</span> &bull; <span style="color:${rar.color}">${rar.name}</span></div>
+    ${statsStr?`<div class="smith-card-stats" ${it.durability<=0?'style="opacity:0.35;text-decoration:line-through;"':''}>${statsStr}</div>`:''}
+    ${attrsHtml?`<div class="smith-card-attrs">${attrsHtml}</div>`:''}
+    <div class="smith-dur-mini"><span>DUR</span><div class="bar"><div class="fill" style="width:${durPct}%;background:${durColor(it)};"></div></div><span>${it.durability}/${it.durMax}${it.durability<=0?' <b style="color:var(--red)">BROKEN</b>':''}</span></div>
+  </div>`;
+}
+
+function renderRepairTab(){
+  const entries=allForgeItems().filter(e=>e.item.durability<e.item.durMax);
+  let html=`<div class="smith-note">Repairing restores durability. Broken items regain their stats and attributes once repaired.</div>`;
+  if(entries.length===0)return html+`<div class="smith-note" style="color:var(--ink-faint)">Nothing needs repair.</div>`;
+  entries.forEach(e=>{
+    const cost=repairCost(e.item);
+    html+=`<div class="smith-card">${smithItemLabel(e)}
+      <div class="smith-card-action">
+        <span class="smith-cost">${cost} ◆</span>
+        <button class="btn-smith-action" ${G.shards<cost?'disabled':''} onclick="repairItem('${e.item.id}')">Repair</button>
+      </div></div>`;
+  });
+  return html;
+}
+
+function renderSellTab(){
+  const entries=allForgeItems();
+  let html=`<div class="smith-note">Broken items sell for scrap value only.${relicIs('vulturecoin')?' <span style="color:var(--gold)">Vulture Coin: +50%.</span>':''}</div>`;
+  if(entries.length===0)return html+`<div class="smith-note" style="color:var(--ink-faint)">Nothing to sell.</div>`;
+  entries.forEach(e=>{
+    const val=sellValue(e.item);
+    const isConfirm=G.forgeConfirm===('sell:'+e.item.id);
+    html+=`<div class="smith-card">${smithItemLabel(e)}
+      <div class="smith-card-action">
+        <span class="smith-cost"><b>+${val} ◆</b></span>
+        <button class="btn-smith-action ${isConfirm?'btn-smith-danger':'btn-smith-sell'}" onclick="smithSell('${e.item.id}')">${isConfirm?'Confirm':'Sell'}</button>
+      </div></div>`;
+  });
+  return html;
+}
+
+function renderExtractTab(){
+  const entries=allForgeItems().filter(e=>e.item.attrs.length>0&&EXTRACT_COST[e.item.rarity]!=null&&e.item.durability>0);
+  let html=`<div class="smith-note">Extract one attribute as an <span style="color:var(--gold)">essence</span> — the item is <span style="color:var(--red)">destroyed</span> in the process.</div>`;
+  if(G.essences.length>0){
+    html+=`<div class="smith-section-label">Essences held (${G.essences.length})</div>`;
+    G.essences.forEach(es=>{
+      const a=ATTR[es.affix];
+      html+=`<div class="smith-preview" style="margin-bottom:3px;"><span style="color:${a.color}">[${a.name}]</span> from ${es.from}</div>`;
+    });
+  }
+  if(entries.length===0)return html+`<div class="smith-note" style="color:var(--ink-faint);margin-top:8px;">No eligible items (Uncommon or better, intact, with attributes).</div>`;
+  html+=`<div class="smith-section-label">Break down</div>`;
+  entries.forEach(e=>{
+    const it=e.item;
+    const cost=EXTRACT_COST[it.rarity];
+    const btns=it.attrs.map(aid=>{
+      const a=ATTR[aid];if(!a)return'';
+      const key=`${it.id}:${aid}`;
+      const isConfirm=G.forgeConfirm===key;
+      return`<button class="btn-smith-action ${isConfirm?'btn-smith-danger':''}" style="border-color:${isConfirm?'':a.color+'66'};${isConfirm?'':'color:'+a.color+';'}" ${G.shards<cost?'disabled':''} onclick="extractAffix('${it.id}','${aid}')">${isConfirm?'DESTROY ITEM':a.name}</button>`;
+    }).join('');
+    html+=`<div class="smith-card">${smithItemLabel(e)}
+      <div class="smith-card-action">
+        <span class="smith-cost">${cost} ◆ each</span>
+        ${btns}
+        ${e.loc==='Equipped'?`<span class="smith-cost" style="color:var(--orange);">will unequip &amp; destroy</span>`:''}
+      </div></div>`;
+  });
+  return html;
+}
+
+function renderInfuseTab(){
+  let html=`<div class="smith-note">Infuse an essence into compatible gear. Costs shards and <span style="color:var(--orange)">-1 max durability</span>.</div>`;
+  if(G.essences.length===0)return html+`<div class="smith-note" style="color:var(--ink-faint)">No essences. Extract attributes first.</div>`;
+  html+=`<div class="smith-section-label">1 — Choose essence</div>`;
+  G.essences.forEach((es,i)=>{
+    const a=ATTR[es.affix];
+    html+=`<div class="essence-row ${G.essenceSel===i?'selected':''}" onclick="selectEssence(${i})">
+      <span class="smith-preview"><span style="color:${a.color}">[${a.name}]</span> ${a.desc}</span>
+      <span class="smith-item-info">from ${es.from}</span>
+    </div>`;
+  });
+  if(G.essenceSel===null||!G.essences[G.essenceSel])return html;
+  const es=G.essences[G.essenceSel];
+  const a=ATTR[es.affix];
+  html+=`<div class="smith-section-label">2 — Choose target</div>`;
+  const targets=allForgeItems().filter(e=>{
+    const it=e.item;
+    if(it.durability<=0)return false;
+    if(a.slots&&!a.slots.includes(it.slot))return false;
+    if(it.attrs.includes(es.affix))return false;
+    return it.attrs.length<AFFIX_CAP[it.rarity];
+  });
+  if(targets.length===0)return html+`<div class="smith-note" style="color:var(--ink-faint)">No compatible items (slot: ${(a.slots||SLOTS).join(', ')}, attribute cap by rarity, no duplicates).</div>`;
+  targets.forEach(e=>{
+    const cost=12+6*RAR_IDX[e.item.rarity];
+    html+=`<div class="smith-card">${smithItemLabel(e)}
+      <div class="smith-card-action">
+        <span class="smith-cost">${cost} ◆ / -1 dur max</span>
+        <button class="btn-smith-action" ${G.shards<cost?'disabled':''} onclick="infuseEssence('${e.item.id}')">Infuse</button>
+      </div></div>`;
+  });
+  return html;
+}
+function selectEssence(i){G.essenceSel=(G.essenceSel===i?null:i);renderSmith();}
+
+function renderReinforceTab(){
+  let html=`<div class="smith-note">Reinforce boosts all stats (+10% / +18% / +25%) but makes repairs costlier. +2 requires Rare, +3 requires Epic.</div>`;
+  const entries=allForgeItems().filter(e=>(e.item.reinforce||0)<3);
+  if(entries.length===0)return html+`<div class="smith-note" style="color:var(--ink-faint)">Everything is fully reinforced.</div>`;
+  entries.forEach(e=>{
+    const it=e.item;
+    const next=(it.reinforce||0)+1;
+    const lvl=REINFORCE_LEVELS[next];
+    const ri=RAR_IDX[it.rarity];
+    if(ri<lvl.minRar){
+      html+=`<div class="smith-card">${smithItemLabel(e)}
+        <div class="smith-card-action"><span class="smith-cost">+${next} requires ${RARITIES[lvl.minRar].name}</span></div></div>`;
+      return;
+    }
+    const cost=lvl.cost(ri);
+    html+=`<div class="smith-card">${smithItemLabel(e)}
+      <div class="smith-card-action">
+        <span class="smith-cost">→ <b>+${next}</b> (+${Math.round(lvl.bonus*100)}% stats)</span>
+        <span class="smith-cost">${cost} ◆</span>
+        <button class="btn-smith-action" ${G.shards<cost?'disabled':''} onclick="reinforceItem('${it.id}')">Reinforce</button>
+      </div></div>`;
+  });
+  return html;
+}
+
+// ─── Forge actions ───────────────────────────────────────────
+function repairItem(id){
+  const f=findItemById(id);if(!f)return;
+  const cost=repairCost(f.item);
+  if(G.shards<cost)return;
+  G.shards-=cost;
+  f.item.durability=f.item.durMax;
+  const _rTax=relicIs('vulturecoin')?' — [Relic] Vulture Coin +25% cost':(relicIs('whetstone')&&f.item.slot==='Weapon'?' — [Relic] Whetstone Oath +20% cost':'');
+  log(`Repaired ${f.item.name} (-${cost} Shards${_rTax}).`,'system');
+  renderSmith();updateUI();
+}
+
+function smithSell(id){
+  const f=findItemById(id);if(!f)return;
+  const key='sell:'+id;
+  if(G.forgeConfirm!==key){G.forgeConfirm=key;renderSmith();return;}
+  G.forgeConfirm=null;
+  const val=sellValue(f.item);
+  G.shards+=val;
+  if(f.equippedSlot)G.equipment[f.equippedSlot]=null;
+  else G.inventory.splice(f.invIdx,1);
+  log(`Sold ${f.item.name} (+${val} Shards${relicIs('vulturecoin')?' — [Relic] Vulture Coin +50%':''}).`,'loot');
+  renderSmith();updateUI();
+}
+
+function extractAffix(itemId,affixId){
+  const f=findItemById(itemId);if(!f)return;
+  const it=f.item;
+  const cost=EXTRACT_COST[it.rarity];
+  if(cost==null||G.shards<cost||!it.attrs.includes(affixId)||it.durability<=0)return;
+  const key=`${itemId}:${affixId}`;
+  if(G.forgeConfirm!==key){G.forgeConfirm=key;renderSmith();return;}
+  G.forgeConfirm=null;
+  G.shards-=cost;
+  G.essences.push({affix:affixId,from:it.name});
+  if(f.equippedSlot)G.equipment[f.equippedSlot]=null;
+  else G.inventory.splice(f.invIdx,1);
+  log(`Extracted [${ATTR[affixId].name}] — ${it.name} crumbles to dust (-${cost} Shards).`,'warn');
+  renderSmith();updateUI();
+}
+
+function infuseEssence(itemId){
+  if(G.essenceSel===null)return;
+  const es=G.essences[G.essenceSel];if(!es)return;
+  const f=findItemById(itemId);if(!f)return;
+  const it=f.item;
+  const a=ATTR[es.affix];
+  if(it.durability<=0)return;
+  if(a.slots&&!a.slots.includes(it.slot))return;
+  if(it.attrs.includes(es.affix)||it.attrs.length>=AFFIX_CAP[it.rarity])return;
+  const cost=12+6*RAR_IDX[it.rarity];
+  if(G.shards<cost)return;
+  G.shards-=cost;
+  it.attrs.push(es.affix);
+  it.durMax=Math.max(4,it.durMax-1);
+  it.durability=Math.min(it.durability,it.durMax);
+  G.essences.splice(G.essenceSel,1);
+  G.essenceSel=null;
+  log(`Infused [${a.name}] into ${it.name} (-${cost} Shards, -1 max durability).`,'loot');
+  renderSmith();updateUI();
+}
+
+function reinforceItem(id){
+  const f=findItemById(id);if(!f)return;
+  const it=f.item;
+  const next=(it.reinforce||0)+1;
+  if(next>3)return;
+  const lvl=REINFORCE_LEVELS[next];
+  const ri=RAR_IDX[it.rarity];
+  if(ri<lvl.minRar)return;
+  const cost=lvl.cost(ri);
+  if(G.shards<cost)return;
+  G.shards-=cost;
+  it.reinforce=next;
+  log(`Reinforced ${it.name} to +${next} (-${cost} Shards).`,'system');
+  renderSmith();updateUI();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LEADERBOARD (V2: relic, factions, build, signature — retro-compatible)
+// ═══════════════════════════════════════════════════════════════
+const LB_KEY='ironveil_leaderboard_v1';
+const LB_MAX=20;
+
+function relicRiskBonus(run){
+  if(!run.relic)return 0;
+  const tags=run.buildTags||[];
+  switch(run.relic.id){
+    case 'glassidol':   return run.floor>=10?100:0;
+    case 'brokencrown': return run.victory?100:0;
+    case 'gravebloom':  return(tags.includes('bleed')||tags.includes('poison'))?60:0;
+    case 'blacklantern':return tags.includes('poison')?60:0;
+    case 'clockwork':   return run.victory?(run.reviveUsed?25:50):0;
+    default:return 0;
+  }
+}
+function calcScore(run){
+  const bonus={
+    boss:(run.bossKills||0)*75,
+    victory:run.victory?500:0,
+    build:(run.buildTop||0)*40,
+    relic:relicRiskBonus(run),
+  };
+  run.bonus=bonus;
+  return run.floor*100 + run.kills*10 + Math.floor(run.shards*0.5) + bonus.boss + bonus.victory + bonus.build + bonus.relic;
+}
+
+function saveRun(victory){
+  const runs=loadRuns();
+  const equip={};
+  SLOTS.forEach(s=>{
+    if(G.equipment[s])equip[s]={name:G.equipment[s].name,rarity:G.equipment[s].rarity,material:G.equipment[s].material,attrs:G.equipment[s].attrs};
+  });
+  let sig=null;
+  SLOTS.forEach(s=>{
+    const it=G.equipment[s];if(!it)return;
+    if(!sig||RAR_IDX[it.rarity]>RAR_IDX[sig.rarity])sig={name:it.name,rarity:it.rarity};
+  });
+  const counts=countBuildTags();
+  const buildTop=Object.values(counts).reduce((m,v)=>Math.max(m,v),0);
+  const run={
+    date:new Date().toLocaleDateString('fr-FR'),
+    floor:G.floor,kills:G.kills,shards:G.shards,
+    bossKills:G.bossKills||0,reviveUsed:!!G.reviveUsed,
+    victory,equip,
+    relic:G.relic?{id:G.relic.id,name:G.relic.name}:null,
+    factions:G.factions?[G.factions.dominant.name,G.factions.secondary.name]:null,
+    build:topBuildTags(2),
+    buildTags:Object.keys(counts).filter(t=>counts[t]>=2),
+    buildTop,
+    signature:sig,
+  };
+  run.score=calcScore(run);
+  runs.push(run);
+  runs.sort((a,b)=>b.score-a.score);
+  try{localStorage.setItem(LB_KEY,JSON.stringify(runs.slice(0,LB_MAX)));}catch(e){}
+}
+
+function loadRuns(){
+  try{return JSON.parse(localStorage.getItem(LB_KEY)||'[]');}catch(e){return[];}
+}
+
+function showLeaderboard(){
+  document.getElementById('lb-overlay').classList.add('active');
+  renderLb();
+}
+function closeLb(){document.getElementById('lb-overlay').classList.remove('active');}
+function clearLb(){if(confirm('Clear all records?')){localStorage.removeItem(LB_KEY);renderLb();}}
+
+function renderLb(){
+  const body=document.getElementById('lbBody');
+  const runs=loadRuns();
+  if(runs.length===0){body.innerHTML='<div class="lb-empty">No runs recorded yet.<br>Begin your descent.</div>';return;}
+  body.innerHTML='';
+  runs.forEach((run,i)=>{
+    const rank=i+1;
+    const rankCls=rank<=3?`rank-${rank}`:'';
+    const rankLabel=rank<=3?`${rank}`:`<span class="lb-rank-other">${rank}</span>`;
+    const entry=document.createElement('div');
+    entry.className=`lb-entry ${rankCls}`;
+
+    let chipHtml='';
+    SLOTS.forEach(s=>{
+      const it=(run.equip||{})[s];
+      if(!it)return;
+      const rar=RARITIES.find(r=>r.id===it.rarity);
+      const attrsStr=(it.attrs||[]).map(a=>ATTR[a]?.name||a).join(', ');
+      chipHtml+=`<span class="lb-item-chip r-${it.rarity}" style="border-color:${rar.color}44;">${s}: ${it.name}${attrsStr?` [${attrsStr}]`:''}</span>`;
+    });
+
+    // V2 metadata (fallback-safe for V1 records)
+    let metaBits=[run.date,`${run.kills} kills`,`${run.shards} shards`];
+    let v2Line='';
+    const buildStr=(run.build||[]).map(t=>TAGS[t]?TAGS[t].name:t).join(' / ');
+    if(buildStr)v2Line+=`Build: <span style="color:var(--ink)">${buildStr}</span> &bull; `;
+    if(run.relic)v2Line+=`Relic: <span style="color:var(--gold)">${run.relic.name}</span> &bull; `;
+    if(run.factions)v2Line+=`Faction: <span style="color:var(--ink)">${run.factions[0]}</span>`;
+    v2Line=v2Line.replace(/ &bull; $/,'');
+    let bonusLine='';
+    if(run.bonus){
+      const parts=[];
+      if(run.bonus.victory)parts.push(`Victory +${run.bonus.victory}`);
+      if(run.bonus.boss)parts.push(`Boss +${run.bonus.boss}`);
+      if(run.bonus.build)parts.push(`Build +${run.bonus.build}`);
+      if(run.bonus.relic)parts.push(`Relic +${run.bonus.relic}`);
+      if(parts.length)bonusLine=`<div class="lb-run-meta" style="color:var(--gold)">Run bonus: ${parts.join(' / ')}</div>`;
+    }
+
+    entry.innerHTML=`
+      <div class="lb-entry-top" onclick="this.parentElement.classList.toggle('expanded')">
+        <div class="lb-rank">${rankLabel}</div>
+        <div class="lb-entry-main">
+          <div class="lb-run-title">${run.victory?'Victory — ':'Fell at '}Floor ${run.floor}${run.signature?` <span style="font-family:var(--font-mono);font-size:9px;color:var(--ink-dim);">— ${run.signature.name}</span>`:''}</div>
+          <div class="lb-run-meta">${metaBits.join(' &bull; ')}</div>
+          ${v2Line?`<div class="lb-run-meta">${v2Line}</div>`:''}
+          ${bonusLine}
+        </div>
+        <div class="lb-score">${run.score.toLocaleString()} pts</div>
+      </div>
+      <div class="lb-entry-detail">
+        <div class="lb-detail-label">Equipment at end of run</div>
+        <div class="lb-equip-grid">${chipHtml||'<span style="font-family:var(--font-mono);font-size:10px;color:var(--ink-dim);">No equipment</span>'}</div>
+      </div>`;
+    body.appendChild(entry);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UI
+// ═══════════════════════════════════════════════════════════════
+function updateUI(){
+  const ps=getPlayerStats();
+  document.getElementById('floorNum').textContent=G.floor;
+  document.getElementById('shardsDisplay').textContent=`${G.shards} Shards`;
+  const fd=document.getElementById('factionDisplay');
+  if(G.factions){
+    fd.innerHTML=`<span style="color:${G.factions.dominant.color}">${G.factions.dominant.name.toUpperCase()}</span> TERRITORY`;
+  }else fd.textContent='';
+  const hpPct=Math.max(0,(G.player.hp/ps.maxHp)*100);
+  document.getElementById('playerHpVal').textContent=`${Math.max(0,G.player.hp)} / ${ps.maxHp}`;
+  document.getElementById('playerHpBar').style.width=hpPct+'%';
+  document.getElementById('pATK').textContent=ps.atk;
+  document.getElementById('pDEF').textContent=ps.def;
+  document.getElementById('pSPD').textContent=ps.spd;
+  document.getElementById('pCRIT').textContent=ps.crit+'%';
+  document.getElementById('pDODGE').textContent=ps.dodge+'%';
+  let pStatus=G.player.status.map(s=>`<span class="status-tag status-${s.id}">${s.id}${s.power>1?' '+s.power:''} (${s.dur})</span>`).join('');
+  if(G.combat.momentum)pStatus+=`<span class="status-tag" style="color:#60c0e0;border-color:#60c0e044;">momentum</span>`;
+  if(G.combat.guard)pStatus+=`<span class="status-tag" style="color:#4a90c8;border-color:#4a90c844;">guard</span>`;
+  document.getElementById('playerStatus').innerHTML=pStatus;
+  renderEquipGrid();
+  renderRunPanel();
+  renderBuildPanel();
+  if(G.enemy){
+    const hpE=Math.max(0,(G.enemy.hp/G.enemy.maxHp)*100);
+    document.getElementById('enemyName').textContent=G.enemy.name+(G.enemy.isBoss?' [BOSS]':'');
+    document.getElementById('enemyHpVal').textContent=`${Math.max(0,G.enemy.hp)} / ${G.enemy.maxHp}`;
+    document.getElementById('enemyHpBar').style.width=hpE+'%';
+    const badge=document.getElementById('enemyTypeBadge');
+    badge.textContent=G.enemy.type.toUpperCase()+(G.enemy.isBoss?` — ${G.enemy.archName.toUpperCase()}`:'');
+    badge.style.color='#c8a84b';badge.style.borderColor='#7a6020';
+    let eStatus=G.enemy.status.map(s=>`<span class="status-tag status-${s.id}">${s.id}${s.power>1?' '+s.power:''} (${s.dur})</span>`).join('');
+    if(G.enemy.corrosion)eStatus+=`<span class="status-tag" style="color:#70c040;border-color:#70c04044;">DEF -${G.enemy.corrosion}</span>`;
+    if(G.enemy.rage)eStatus+=`<span class="status-tag" style="color:#e06030;border-color:#e0603044;">rage +${Math.round(G.enemy.rage*100)}%</span>`;
+    document.getElementById('enemyStatus').innerHTML=eStatus;
+    // Spoils reveal at half health: the promise sharpens
+    if(G.enemy.spoils&&!G.enemy.spoilsRevealed&&!G.enemy.isBoss&&G.enemy.hp<=G.enemy.maxHp/2&&G.combat.active){
+      G.enemy.spoilsRevealed=true;
+      log(`  The spoils glint: ${spoilsSummary(G.enemy,true)}`,'sell');
+    }
+    renderMatchup();
+    renderBossCard();
+    renderSpoils();
+  }else{
+    const bc=document.getElementById('bossCard');if(bc)bc.style.display='none';
+    const sp=document.getElementById('spoilsRow');if(sp)sp.style.display='none';
+  }
+  renderInventory();renderEquippedDetail();renderCombatCanvas();renderPlayerCanvas();
+}
+
+
+
+// ─── SPOILS TEASING (V2.3) ───────────────────────────────────
+// Group identical slots: "Weapon ×2 / Amulet"
+function spoilsSummary(e,revealed){
+  if(!e.spoils)return'';
+  if(!revealed){
+    const bySlot={};
+    e.spoils.forEach(it=>{bySlot[it.slot]=(bySlot[it.slot]||0)+1;});
+    return Object.entries(bySlot).map(([s,n])=>n>1?`${s} ×${n}`:s).join(' / ');
+  }
+  return e.spoils.map(it=>{
+    const r=RARITIES.find(x=>x.id===it.rarity);
+    return`${r.name} ${it.slot} — ${MAT[it.material].name}`;
+  }).join(' / ');
+}
+function renderSpoils(){
+  const el=document.getElementById('spoilsRow');if(!el)return;
+  const e=G.enemy;
+  if(!e||!e.spoils||!G.combat.active){el.style.display='none';return;}
+  el.style.display='';
+  const revealed=e.spoilsRevealed||e.isBoss; // bosses show their trophies immediately
+  let chips=e.spoils.map(it=>{
+    const r=RARITIES.find(x=>x.id===it.rarity);
+    const icon=structIconSvg(it,14,revealed?(MAT[it.material]?.color):'#3a4450');
+    if(revealed)return`<span class="spoil-chip" style="color:${r.color};border-color:${r.color}55;">${icon}${r.name} ${it.slot}</span>`;
+    return`<span class="spoil-chip spoil-hidden">${icon}${it.slot} ???</span>`;
+  }).join('');
+  el.innerHTML=`<span class="spoil-label">${e.isBoss?'TROPHIES':'SPOILS'}</span>${chips}`;
+}
+
+// Boss threat card: hardcoded advice per archetype / power
+const ARCH_ADVICE={
+  berserker:'Each blow it takes fuels its rage. Long fights grow dangerous.',
+  tank:'Heavy armor, long fight. Armor shred keeps its value.',
+  reflector:'Critical damage comes back at you. Damage over time does not.',
+  assassin:'Fast — strikes twice. Raw HP melts quickly here.',
+  regenerator:'It recovers every few turns. Sustained pressure counts.',
+  hexer:'Its blows carry curses. Ailments will find you.',
+};
+const POWER_ADVICE={
+  ashtyranny:'Suffering feeds it — its attack rises with every blow taken.',
+  silentrenewal:'It gathers strength over time.',
+  mirrorshell:'Critical damage is dangerous to you. Damage over time is unaffected.',
+  plagueaura:'Your ailments linger longer here.',
+  irontax:'Boots and Amulet strain under each of its hits.',
+  veilshift:'Its armor rises at half health. Defense shred remains valuable.',
+  bonelock:'Your footing is bound while it stands strong — dodging suffers.',
+  lastoath:'A ward will absorb one killing blow.',
+};
+function renderBossCard(){
+  const el=document.getElementById('bossCard');if(!el)return;
+  const e=G.enemy;
+  if(!e||!e.isBoss){el.style.display='none';return;}
+  el.style.display='';
+  el.innerHTML=`
+    <div class="boss-card-head">
+      <span class="boss-card-arch">${e.archName}</span>
+      <span class="boss-card-power">${e.powerName}</span>
+    </div>
+    <div class="boss-card-threat">${e.archTele} ${e.powerTele}</div>
+    <div class="boss-card-advice"><b>ADVICE</b> ${ARCH_ADVICE[e.arch]||''} ${POWER_ADVICE[e.power]||''}</div>`;
+}
+
+function renderRunPanel(){
+  const el=document.getElementById('runPanel');if(!el)return;
+  let html='';
+  if(G.relic){
+    html+=`<div class="run-line">Relic: <span class="run-relic-name" title="+ ${G.relic.good}\n− ${G.relic.bad}">${G.relic.name}</span></div>`;
+    html+=`<div class="run-line" style="font-size:9px;color:var(--green);">+ ${G.relic.good}</div>`;
+    html+=`<div class="run-line" style="font-size:9px;color:var(--orange);">&minus; ${G.relic.bad}</div>`;
+  }
+  if(G.factions){
+    html+=`<div class="run-line">Faction: <span style="color:${G.factions.dominant.color}">${G.factions.dominant.name}</span> / ${G.factions.secondary.name}</div>`;
+  }
+  const co=[];
+  if(G.carryOver.bleed)co.push(`Bleed ${G.carryOver.bleed.power} (${G.carryOver.bleed.dur}t)`);
+  if(G.carryOver.poison)co.push(`Poison ${G.carryOver.poison.power} (${G.carryOver.poison.dur}t)`);
+  if(co.length)html+=`<div class="run-line">Next foe: <span class="carryover-tag">${co.join(' + ')}</span></div>`;
+  if(G.essences.length)html+=`<div class="run-line">Essences: <span>${G.essences.length}</span></div>`;
+  el.innerHTML=html||'<div class="run-line" style="color:var(--ink-faint)">—</div>';
+}
+
+const MAIN_ARCHETYPES=['bleed','poison','crit','defense','mobility']; // burn/drain/economy are support tags
+
+function renderBuildPanel(){
+  const el=document.getElementById('buildPanel');if(!el)return;
+  const counts=countBuildTags();
+  const entries=Object.entries(counts).sort((a,b)=>{
+    // main archetypes first at equal count
+    const am=MAIN_ARCHETYPES.includes(a[0])?1:0,bm=MAIN_ARCHETYPES.includes(b[0])?1:0;
+    return b[1]-a[1]||bm-am;
+  });
+  if(entries.length===0){el.innerHTML='<div class="run-line" style="color:var(--ink-faint)">No build direction yet.</div>';return;}
+  const tierLabel=(t,n)=>{
+    if(MAIN_ARCHETYPES.includes(t))return n>=3?'archetype online':n>=2?'synergy — loot favors this':'enabled';
+    return n>=2?'support active':'utility';
+  };
+  let html=entries.slice(0,3).map(([t,n])=>{
+    const tag=TAGS[t];if(!tag)return'';
+    return`<div class="bm-row">
+      <span class="build-chip" style="color:${tag.color};border-color:${tag.color}${n>=2?'':'44'};${n>=2?'font-weight:bold;':''}">${tag.name} ×${n}</span>
+      <span class="bm-tier ${n>=2?'on':''}">${tierLabel(t,n)}</span>
+    </div>`;
+  }).join('');
+  // "Need": only main archetypes, only reachable affixes, slot hints shown
+  const topMain=entries.find(([t,n])=>MAIN_ARCHETYPES.includes(t)&&n<3&&n>=1);
+  if(topMain&&TAGS[topMain[0]]){
+    const worn=equippedAffixIds();
+    // A slot is "improvable" if empty, or its item is below the affix cap (infusable)
+    const improvable=new Set();
+    SLOTS.forEach(s=>{
+      const it=G.equipment[s];
+      if(!it||it.attrs.length<AFFIX_CAP[it.rarity])improvable.add(s);
+    });
+    const options=ALL_ATTRIBUTES
+      .filter(a=>(a.tags||[]).includes(topMain[0])&&!worn.has(a.id))
+      .filter(a=>(a.slots||SLOTS).some(s=>improvable.has(s)))
+      .slice(0,2);
+    if(options.length){
+      html+=`<div class="bm-need">Need: ${options.map(a=>{
+        const slots=(a.slots||SLOTS).filter(s=>improvable.has(s)).join('/');
+        return`<span>${a.name}</span> <span style="color:var(--ink-faint)">(${slots})</span>`;
+      }).join(' or ')}</div>`;
+    }
+  }
+  el.innerHTML=html;
+}
+
+
+// ─── SPOILS TEASING (V2.3) ───────────────────────────────────
+// Group identical slots: "Weapon ×2 / Amulet"
+function spoilsSummary(e,revealed){
+  if(!e.spoils)return'';
+  if(!revealed){
+    const bySlot={};
+    e.spoils.forEach(it=>{bySlot[it.slot]=(bySlot[it.slot]||0)+1;});
+    return Object.entries(bySlot).map(([s,n])=>n>1?`${s} ×${n}`:s).join(' / ');
+  }
+  return e.spoils.map(it=>{
+    const r=RARITIES.find(x=>x.id===it.rarity);
+    return`${r.name} ${it.slot} — ${MAT[it.material].name}`;
+  }).join(' / ');
+}
+function renderSpoils(){
+  const el=document.getElementById('spoilsRow');if(!el)return;
+  const e=G.enemy;
+  if(!e||!e.spoils||!G.combat.active){el.style.display='none';return;}
+  el.style.display='';
+  const revealed=e.spoilsRevealed||e.isBoss; // bosses show their trophies immediately
+  let chips=e.spoils.map(it=>{
+    const r=RARITIES.find(x=>x.id===it.rarity);
+    const icon=structIconSvg(it,14,revealed?(MAT[it.material]?.color):'#3a4450');
+    if(revealed)return`<span class="spoil-chip" style="color:${r.color};border-color:${r.color}55;">${icon}${r.name} ${it.slot}</span>`;
+    return`<span class="spoil-chip spoil-hidden">${icon}${it.slot} ???</span>`;
+  }).join('');
+  el.innerHTML=`<span class="spoil-label">${e.isBoss?'TROPHIES':'SPOILS'}</span>${chips}`;
+}
+
+// Boss threat card: hardcoded advice per archetype / power
+function renderEquipGrid(){
+  const grid=document.getElementById('equipGrid');grid.innerHTML='';
+  SLOTS.forEach(slot=>{
+    const item=G.equipment[slot];
+    const div=document.createElement('div');
+    const justBroke=G._brokenPulse&&G._brokenPulse.slot===slot&&(Date.now()-G._brokenPulse.at)<1600;
+    div.className='equip-slot'+(item?' has-item':'')+(slot==='Amulet'?' full-width':'')+(justBroke?' slot-broken':'');
+    div.innerHTML=`<div class="equip-slot-label">${slot}</div>`;
+    if(item){
+      div.innerHTML+=`<div class="equip-slot-name r-${item.rarity}">${item.name}${(item.reinforce||0)>0?` +${item.reinforce}`:''}</div>
+        <div class="equip-dur-bar"><div class="equip-dur-fill" style="width:${(item.durability/item.durMax)*100}%;background:${durColor(item)};"></div></div>`;
+    }else{
+      div.innerHTML+=`<div class="empty-slot-text">— empty —</div>`;
+    }
+    div.addEventListener('mouseenter',e=>item&&showTooltip(e,item));
+    div.addEventListener('mousemove',e=>item&&moveTooltip(e));
+    div.addEventListener('mouseleave',hideTooltip);
+    grid.appendChild(div);
+  });
+}
+
+function renderMatchup(){
+  const row=document.getElementById('matchupRow');row.innerHTML='';
+  if(!G.equipment.Weapon||!G.enemy)return;
+  const wep=G.equipment.Weapon;
+  const matchup=getWeaponMatchup();
+  const matInfo=MAT[wep.material];
+  const b1=document.createElement('span');
+  b1.className='matchup-badge';
+  b1.textContent=`${matInfo.name} vs ${G.enemy.type}: ${matchup.label}`;
+  b1.style.color=matchup.color;b1.style.borderColor=matchup.color;
+  row.appendChild(b1);
+  const chart=TYPE_CHART[G.enemy.type];
+  if(chart)chart.weak.forEach(m=>{
+    const b=document.createElement('span');b.className='matchup-badge';
+    b.style.color='#4ac870';b.style.borderColor='#1a4828';b.textContent=`WEAK: ${m}`;row.appendChild(b);
+  });
+}
+
+
+
+// Full equip preview for an inventory item: tradeoffs + player stat deltas
+function equipPreviewHtml(item){
+  let html=lootCompareHtml(item);
+  // Simulate the swap to show real player stats after equip
+  const slot=item.slot;
+  const before=getPlayerStats();
+  const old=G.equipment[slot];
+  G.equipment[slot]=item;
+  const after=getPlayerStats();
+  G.equipment[slot]=old;
+  const deltas=[];
+  [['atk','ATK'],['def','DEF'],['spd','SPD'],['crit','CRIT'],['dodge','DODGE'],['maxHp','HP']].forEach(([k,label])=>{
+    if(before[k]!==after[k])deltas.push(`<span class="${after[k]>before[k]?'lc-up':'lc-down'}">${label} ${before[k]}→${after[k]}</span>`);
+  });
+  if(deltas.length)html+=`<div class="loot-compare" style="border-top:none;margin-top:0;padding-top:2px;"><div class="lc-title">After equip</div><div>${deltas.join('  ')}</div></div>`;
+  return html;
+}
+
+// Small "why keep this" labels for inventory cards
+function itemIntent(item){
+  const out=[];
+  if(item.durability<=0){out.push({t:'BROKEN — REPAIRABLE',c:'#c84040'});return out;}
+  const cur=G.equipment[item.slot];
+  const statGain=['atk','def','hp','spd','crit','dodge'].reduce((s,k)=>s+((item.stats[k]||0)-((cur&&cur.stats[k])||0))*(k==='atk'||k==='def'?1:0.5),0);
+  if(!cur||statGain>0||lootVerdict(item,cur).label==='BUILD UPGRADE')out.push({t:'EQUIP CANDIDATE',c:'#4ac870'});
+  else if(item.slot==='Weapon'&&G.factions&&G.factions.dominant.types.some(t=>(TYPE_CHART[t]?.weak||[]).includes(item.material)))out.push({t:'BACKUP WEAPON',c:'#60c0e0'});
+  if(EXTRACT_COST[item.rarity]!=null&&item.attrs.length>0)out.push({t:'EXTRACTABLE',c:'#c8a84b'});
+  if(out.length===0)out.push({t:`SELL +${sellValue(item)} ◆`,c:'#7c8c9c'});
+  return out.slice(0,2);
+}
+
+
+// ─── INVENTORY COMPARE OVERLAY ────────────────────────────────
+// Opens an overlay identical in spirit to the loot screen, showing
+// the selected inventory item with its full compare block, then
+// lets the player equip with one click.
+let _icIdx=null;
+
+function openInvCompare(idx){
+  const item=G.inventory[idx];if(!item)return;
+  _icIdx=idx;
+  const cur=G.equipment[item.slot];
+  const ov=document.getElementById('inv-compare-overlay');
+  ov.classList.add('active');
+  // Title + subtitle
+  document.getElementById('icTitle').innerHTML=
+    `${structIconSvg(item,20)} ${item.name}${(item.reinforce||0)>0?` +${item.reinforce}`:''}`;
+  const v=lootVerdict(item,cur);
+  document.getElementById('icSubtitle').innerHTML=
+    cur?`<span class="lc-verdict" style="color:${v.color};border-color:${v.color}66;">${v.label}</span>`
+       :`<span class="lc-up">Empty ${item.slot} — free upgrade</span>`;
+  // Body: same full loot card (isLoot=true so compare block renders)
+  const body=document.getElementById('icBody');
+  body.innerHTML='';
+  const card=buildItemCard(item,true);
+  card.onclick=null; // no click-to-take here
+  card.style.cursor='default';
+  body.appendChild(card);
+  // Simulate and show full player stat deltas
+  const slot=item.slot;
+  const before=getPlayerStats();
+  const old=G.equipment[slot];
+  G.equipment[slot]=item;
+  const after=getPlayerStats();
+  G.equipment[slot]=old;
+  const deltas=[];
+  [['atk','ATK'],['def','DEF'],['spd','SPD'],['crit','CRIT'],['dodge','DODGE'],['maxHp','HP']].forEach(([k,label])=>{
+    if(before[k]!==after[k])deltas.push(`<span class="${after[k]>before[k]?'lc-up':'lc-down'}">${label} ${before[k]}→${after[k]}</span>`);
+  });
+  if(deltas.length){
+    const row=document.createElement('div');
+    row.className='loot-compare';
+    row.style.marginTop='6px';
+    row.innerHTML=`<div class="lc-title">After equip</div><div>${deltas.join('  ')}</div>`;
+    body.appendChild(row);
+  }
+  // Equip button
+  const btn=document.getElementById('icEquipBtn');
+  btn.textContent=cur?`Replace ${cur.name}`:`Equip`;
+  btn.onclick=()=>{equipFromInventory(idx);closeInvCompare();};
+}
+
+function closeInvCompare(){
+  document.getElementById('inv-compare-overlay').classList.remove('active');
+  _icIdx=null;
+}
+
+function renderInventory(){
+  const list=document.getElementById('inventoryList');list.innerHTML='';
+  if(G.inventory.length===0){list.innerHTML='<p style="font-family:var(--font-mono);font-size:11px;color:var(--ink-dim);padding:8px 0;">Inventory empty.<br><span style="font-size:10px;color:var(--ink-faint);">Visit the Forge to sell.</span></p>';return;}
+  G.inventory.forEach((item,i)=>{
+    const card=buildItemCard(item,false);
+    const intents=itemIntent(item);
+    if(intents.length){
+      const row=document.createElement('div');
+      row.className='intent-row';
+      row.innerHTML=intents.map(x=>`<span class="intent-chip" style="color:${x.c};border-color:${x.c}55;">${x.t}</span>`).join('');
+      card.insertBefore(row,card.firstChild);
+    }
+    card.onclick=()=>openInvCompare(i);
+    card.style.cursor='pointer';
+    // small hint that clicking opens the compare overlay
+    const hint=document.createElement('div');
+    hint.className='cmp-hint';
+    hint.textContent=G.equipment[item.slot]?'▸ click to compare & replace':'▸ click to equip';
+    card.appendChild(hint);
+    card.addEventListener('mouseenter',e=>showTooltip(e,item));
+    card.addEventListener('mousemove',e=>moveTooltip(e));
+    card.addEventListener('mouseleave',hideTooltip);
+    list.appendChild(card);
+  });
+}
+
+function renderEquippedDetail(){
+  const list=document.getElementById('equippedDetail');list.innerHTML='';
+  let any=false;
+  SLOTS.forEach(slot=>{
+    const item=G.equipment[slot];if(!item)return;any=true;
+    const card=buildItemCard(item,false);
+    // What this piece contributes to the build — and what unequipping would cost
+    const contrib={};
+    activeAttrs(item).forEach(aid=>(ATTR[aid]?.tags||[]).forEach(t=>{contrib[t]=(contrib[t]||0)+1;}));
+    const now=countBuildTags();
+    const lines=Object.entries(contrib).filter(([t])=>TAGS[t]).map(([t,n])=>{
+      const cur=now[t]||0;
+      const drop=cur-n;
+      const losesTier=cur>=2&&drop<2;
+      return`<span style="color:${TAGS[t].color}${losesTier?'':'99'}">${TAGS[t].name} ×${cur}→×${drop}${losesTier?' ⚠':''}</span>`;
+    });
+    if(lines.length){
+      const cb=document.createElement('div');
+      cb.className='loot-compare';
+      cb.innerHTML=`<div class="lc-title">If unequipped</div><div>${lines.join('  ')}</div>`;
+      card.appendChild(cb);
+    }
+    const unequip=document.createElement('button');unequip.className='equip-btn';
+    unequip.style.marginTop='6px';
+    unequip.style.background='var(--red-dim)';unequip.style.color='var(--ink)';
+    unequip.textContent='Unequip';unequip.onclick=()=>unequipItem(slot);
+    card.appendChild(unequip);
+    card.addEventListener('mouseenter',e=>showTooltip(e,item));
+    card.addEventListener('mousemove',e=>moveTooltip(e));
+    card.addEventListener('mouseleave',hideTooltip);
+    list.appendChild(card);
+  });
+  if(!any)list.innerHTML='<p style="font-family:var(--font-mono);font-size:11px;color:var(--ink-dim);padding:8px 0;">No equipment worn.</p>';
+}
+
+function buildItemCard(item,isLoot){
+  const card=document.createElement('div');
+  card.className=isLoot?`loot-item-card loot-r-${item.rarity}`:'item-card';
+  const mat=MAT[item.material];
+  const rar=RARITIES.find(r=>r.id===item.rarity);
+  const st=structOf(item);
+  const statsStr=Object.entries(item.stats).map(([k,v])=>`${k.toUpperCase()}${v>=0?'+':''}${v}`).join('  ');
+  const durPct=(item.durability/item.durMax)*100;
+  const dc=durColor(item);
+  const broken=item.durability<=0;
+  const active=activeAttrs(item);
+  const attrsHtml=item.attrs.map(aid=>{
+    const a=ATTR[aid];if(!a)return'';
+    const inactive=!active.includes(aid);
+    return`<span class="attr-tag" style="color:${a.color};border-color:${a.color}44;${inactive?'opacity:0.35;text-decoration:line-through;':''}">${a.name}</span>`;
+  }).join('');
+  // Build-tag chips (unique tags across affixes)
+  const tagSet=new Set();
+  item.attrs.forEach(aid=>(ATTR[aid]?.tags||[]).forEach(t=>tagSet.add(t)));
+  const chipsHtml=[...tagSet].map(t=>{
+    const tag=TAGS[t];if(!tag)return'';
+    return`<span class="build-chip" style="color:${tag.color};border-color:${tag.color}44;">${tag.name}</span>`;
+  }).join('');
+  const prof=durProfile(item);
+  const durState=broken?'<span style="color:var(--red);font-family:var(--font-mono);font-size:9px;"> BROKEN</span>':
+    item.durability<=item.durMax*0.1?'<span style="color:var(--red);font-family:var(--font-mono);font-size:9px;"> CRITICAL</span>':
+    item.durability<=item.durMax*0.25?'<span style="color:var(--orange);font-family:var(--font-mono);font-size:9px;"> DAMAGED</span>':'';
+  card.innerHTML=`
+    <div class="item-card-header">
+      <span class="item-name r-${item.rarity}">${structIconSvg(item,18)}${item.name}${(item.reinforce||0)>0?` +${item.reinforce}`:''}</span>
+      <span class="item-slot-tag">${item.slot}</span>
+    </div>
+    <div class="item-stats" style="${broken?'opacity:0.35;text-decoration:line-through;':''}">${statsStr||'—'}</div>
+    <div style="font-family:var(--font-mono);font-size:9px;color:${mat.color};margin-bottom:4px;">${st?st.id.toUpperCase()+' &bull; ':''}${mat.name.toUpperCase()} &bull; <span style="color:${rar.color}">${rar.name.toUpperCase()}</span>${prof?` &bull; <span class="dur-profile" style="color:${prof.color};border-color:${prof.color}44;">${prof.label}</span>`:''}</div>
+    ${chipsHtml?`<div class="item-chips">${chipsHtml}</div>`:''}
+    <div class="item-attrs">${attrsHtml}</div>
+    <div class="item-dur-row">
+      <span class="item-dur-label">DUR</span>
+      <div class="item-dur-bar-wrap"><div class="item-dur-bar" style="width:${durPct}%;background:${dc};"></div></div>
+      <span class="item-dur-num">${item.durability}/${item.durMax}${durState}</span>
+    </div>
+    ${isLoot?lootCompareHtml(item):''}`;
+  return card;
+}
+
+// Short decision verdict for a loot item vs currently equipped
+function lootVerdict(item,cur){
+  // Build delta: does any tag reach a new tier >=2 ?
+  const curCounts=countBuildTags();
+  const simCounts={};
+  SLOTS.forEach(s=>{
+    const it=s===item.slot?item:G.equipment[s];
+    if(!it)return;
+    activeAttrs(it).forEach(aid=>(ATTR[aid]?.tags||[]).forEach(t=>{simCounts[t]=(simCounts[t]||0)+1;}));
+  });
+  let buildUp=false;
+  Object.keys(simCounts).forEach(t=>{if((simCounts[t]||0)>(curCounts[t]||0)&&simCounts[t]>=2)buildUp=true;});
+  const statGain=(k)=> (item.stats[k]||0)-((cur&&cur.stats[k])||0);
+  const offGain=statGain('atk')+statGain('crit')*0.5;
+  const totGain=['atk','def','hp','spd','crit','dodge'].reduce((s,k)=>s+statGain(k)*(k==='atk'||k==='def'?1:0.5),0);
+  const prof=durProfile(item);
+  const fragile=prof&&(prof.label==='FRAGILE'||prof.label==='VOLATILE');
+  const hasEco=item.attrs.some(a=>(ATTR[a]?.tags||[]).includes('economy'))||item.attrs.includes('soulbound');
+  const extractable=EXTRACT_COST[item.rarity]!=null&&item.attrs.length>0;
+  if(buildUp)return{label:'BUILD UPGRADE',color:'#4ac870'};
+  if(fragile&&offGain>0)return{label:'RISKY POWER',color:'#c87040'};
+  if(totGain>=6)return{label:'RAW POWER',color:'#e0c060'};
+  if((hasEco||extractable)&&totGain<=0)return{label:'FORGE VALUE',color:'#c8a84b'};
+  return{label:'SIDEGRADE',color:'#7c8c9c'};
+}
+
+// "Compared to equipped" — compact: verdict + max 3 lines, extras on hover
+function lootCompareHtml(item){
+  const cur=G.equipment[item.slot];
+  if(!cur)return`<div class="loot-compare"><span class="lc-verdict" style="color:#4ac870;border-color:#4ac87066;">FREE SLOT</span> <span class="lc-up">Empty ${item.slot} — free upgrade</span></div>`;
+  const rows=[];
+  // 1. stat diffs
+  const keys=new Set([...Object.keys(item.stats),...Object.keys(cur.stats)]);
+  const diffs=[];
+  keys.forEach(k=>{
+    const d=(item.stats[k]||0)-(cur.stats[k]||0);
+    if(d!==0)diffs.push(`<span class="${d>0?'lc-up':'lc-down'}">${k.toUpperCase()} ${d>0?'+':''}${d}</span>`);
+  });
+  if(diffs.length)rows.push(diffs.join('  '));
+  // 2. affix gain/loss (single merged line)
+  const gain=item.attrs.filter(a=>!cur.attrs.includes(a)).map(a=>ATTR[a]?.name||a);
+  const lose=cur.attrs.filter(a=>!item.attrs.includes(a)).map(a=>ATTR[a]?.name||a);
+  const gl=[];
+  if(gain.length)gl.push(`<span class="lc-up">+ ${gain.join(', ')}</span>`);
+  if(lose.length)gl.push(`<span class="lc-down">&minus; ${lose.join(', ')}</span>`);
+  if(gl.length)rows.push(gl.join('  '));
+  // 3. build delta
+  const curCounts=countBuildTags();
+  const simCounts={};
+  SLOTS.forEach(s=>{
+    const it=s===item.slot?item:G.equipment[s];
+    if(!it)return;
+    activeAttrs(it).forEach(aid=>(ATTR[aid]?.tags||[]).forEach(t=>{simCounts[t]=(simCounts[t]||0)+1;}));
+  });
+  const tagDeltas=[];
+  new Set([...Object.keys(curCounts),...Object.keys(simCounts)]).forEach(t=>{
+    const a=curCounts[t]||0,b=simCounts[t]||0;
+    if(a!==b&&Math.max(a,b)>=2)tagDeltas.push(`<span class="${b>a?'lc-up':'lc-down'}">${TAGS[t]?.name||t} ×${a}→×${b}</span>`);
+  });
+  if(tagDeltas.length)rows.push(tagDeltas.join('  '));
+  // 4. weapon material vs faction  5. durability shift — overflow candidates
+  const extras=[];
+  if(item.slot==='Weapon'&&G.factions){
+    const dom=G.factions.dominant;
+    if(dom.types.some(t=>(TYPE_CHART[t]?.weak||[]).includes(item.material)))
+      extras.push(`<span class="lc-note">${MAT[item.material].name}: strong vs ${dom.name}</span>`);
+    else if(dom.types.every(t=>(TYPE_CHART[t]?.resist||[]).includes(item.material)||(TYPE_CHART[t]?.immune||[]).includes(item.material)))
+      extras.push(`<span class="lc-down">${MAT[item.material].name}: resisted by ${dom.name}</span>`);
+  }
+  const p1=durProfile(cur),p2=durProfile(item);
+  if(p1&&p2&&p1.label!==p2.label)extras.push(`<span class="lc-neutral">Durability: ${p1.label} → ${p2.label}</span>`);
+  // Cap at 3 visible lines; overflow becomes a hover title
+  let all=[...rows,...extras];
+  if(!all.length)all=[`<span class="lc-neutral">Comparable to equipped</span>`];
+  const visible=all.slice(0,3);
+  const hidden=all.slice(3);
+  const v=lootVerdict(item,cur);
+  let html=`<div class="loot-compare"${hidden.length?` title="${hidden.map(h=>h.replace(/<[^>]+>/g,'')).join(' · ').replace(/"/g,'&quot;')}"`:''}>`;
+  html+=`<div><span class="lc-verdict" style="color:${v.color};border-color:${v.color}66;">${v.label}</span> <span class="lc-title" style="display:inline;">vs ${cur.name}</span></div>`;
+  html+=visible.map(r=>`<div>${r}</div>`).join('');
+  if(hidden.length)html+=`<div class="lc-neutral">+ ${hidden.length} more — hover</div>`;
+  return html+`</div>`;
+}
+
+function durColor(item){
+  const p=item.durability/item.durMax;
+  if(p>0.5) return'#4ac870';
+  if(p>0.25)return'#c8c040';
+  if(p>0.1) return'#c87040';
+  return'#c84040';
+}
+
+
+// Celebrate crossing a build tier on a MAIN archetype (×2 synergy, ×3 online)
+function checkBuildMilestone(prevCounts){
+  const now=countBuildTags();
+  MAIN_ARCHETYPES.forEach(t=>{
+    const a=prevCounts[t]||0,b=now[t]||0;
+    const tag=TAGS[t];if(!tag)return;
+    if(b>=3&&a<3){
+      log(`★ ${tag.name} ×${b} — ARCHETYPE ONLINE`,'crit');
+      fxDamage('player',`${tag.name} ONLINE`,tag.color,true);
+      fxRing('player',tag.color);fxRing('player',tag.color,true);
+    }else if(b>=2&&a<2){
+      log(`★ ${tag.name} ×${b} — synergy active, loot now favors this.`,'sell');
+      fxRing('player',tag.color);
+    }
+  });
+}
+
+function equipFromInventory(idx){
+  const item=G.inventory[idx];if(!item)return;
+  const prev=countBuildTags();
+  const old=G.equipment[item.slot];
+  G.equipment[item.slot]=item;G.inventory.splice(idx,1);
+  if(old)G.inventory.push(old);
+  G.invSel=null;
+  checkBuildMilestone(prev);
+  updateUI();
+}
+function unequipItem(slot){
+  const item=G.equipment[slot];if(!item)return;
+  if(G.inventory.length>=12){log('Inventory full!','warn');return;}
+  G.inventory.push(item);G.equipment[slot]=null;updateUI();
+}
+
+function disableActions(d){document.getElementById('btnAttack').disabled=d;document.getElementById('btnGuard').disabled=d;document.getElementById('btnFlee').disabled=d;}
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['inventory','equipped'][i]===tab));
+  document.querySelectorAll('.tab-content').forEach((c,i)=>c.classList.toggle('active',['tab-inventory','tab-equipped'][i]===`tab-${tab}`));
+}
+
+// ─── LOG ─────────────────────────────────────────────────────
+function log(msg,cls='system'){
+  const el=document.getElementById('combatLog');
+  const entry=document.createElement('div');entry.className=`log-entry ${cls}`;
+  entry.textContent=msg;el.appendChild(entry);el.scrollTop=el.scrollHeight;
+}
+function clearLog(){document.getElementById('combatLog').innerHTML='';}
+
+// ─── TOOLTIP ─────────────────────────────────────────────────
+function showTooltip(e,item){
+  const tt=document.getElementById('tooltip');
+  const mat=MAT[item.material];const rar=RARITIES.find(r=>r.id===item.rarity);
+  const st=structOf(item);
+  const chart=Object.entries(TYPE_CHART).filter(([t,c])=>c.weak.includes(item.material));
+  let html=`<div class="tt-name r-${item.rarity}">${structIconSvg(item,18)}${item.name}${(item.reinforce||0)>0?` +${item.reinforce}`:''}</div>`;
+  html+=`<div class="tt-stat" style="color:${mat.color};margin-bottom:4px;">${st?st.id+' &bull; ':''}${mat.name} &bull; <span style="color:${rar.color}">${rar.name}</span> &bull; ${item.slot}</div>`;
+  if(st&&st.prof)html+=`<div class="tt-stat" style="color:var(--ink-dim);margin-bottom:4px;">${st.prof}</div>`;
+  Object.entries(item.stats).forEach(([k,v])=>{html+=`<div class="tt-stat">${k.toUpperCase()}: <span>${v>=0?'+':''}${v}</span></div>`;});
+  if((item.reinforce||0)>0)html+=`<div class="tt-stat" style="color:var(--gold);">Reinforced +${item.reinforce}: all stats +${Math.round(REINFORCE_BONUS[item.reinforce]*100)}%</div>`;
+  if(item.attrs.length>0){
+    const active=activeAttrs(item);
+    html+=`<div style="margin-top:6px;border-top:1px solid var(--border);padding-top:4px;">`;
+    item.attrs.forEach(aid=>{
+      const a=ATTR[aid];if(!a)return;
+      const inactive=!active.includes(aid);
+      const tags=(a.tags||[]).map(t=>TAGS[t]?TAGS[t].name:t).join('/');
+      html+=`<div style="color:${a.color};${inactive?'opacity:0.4;':''}">[${a.name}${tags?` — ${tags}`:''}]${inactive?' (inactive)':''} <span style="color:var(--ink-dim);">${a.desc}</span></div>`;
+    });
+    html+=`</div>`;
+  }
+  if(chart.length>0)html+=`<div class="tt-warn">Effective vs: ${chart.map(([t])=>t).join(', ')}</div>`;
+  const pct=item.durability/item.durMax;
+  if(pct<=0)html+=`<div class="tt-destroy">BROKEN — no stats, no attributes. Sells for scrap. Repairable at the Forge.</div>`;
+  else if(pct<=0.1)html+=`<div class="tt-destroy">Near collapse — -60% stats, only the first attribute holds.</div>`;
+  else if(pct<=0.25)html+=`<div class="tt-warn">Heavily damaged — -30% stats, last attribute inactive.</div>`;
+  else if(pct<=0.5)html+=`<div class="tt-warn">Damaged — -10% stats.</div>`;
+  tt.innerHTML=html;tt.style.display='block';moveTooltip(e);
+}
+function moveTooltip(e){
+  const tt=document.getElementById('tooltip');
+  let x=e.clientX+14,y=e.clientY+14;
+  if(x+250>window.innerWidth)x=e.clientX-260;
+  if(y+tt.offsetHeight>window.innerHeight)y=e.clientY-tt.offsetHeight-10;
+  tt.style.left=x+'px';tt.style.top=y+'px';
+}
+function hideTooltip(){document.getElementById('tooltip').style.display='none';}
+
+// ─── CANVAS ──────────────────────────────────────────────────
+function renderTitleCanvas(){
+  const canvas=document.getElementById('titleCanvas');
+  const ctx=canvas.getContext('2d');const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const grad=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,W/2);
+  grad.addColorStop(0,'rgba(200,168,75,0.12)');grad.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+  ctx.font='bold 72px "Cinzel", serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.shadowColor='rgba(200,168,75,0.6)';ctx.shadowBlur=30;
+  ctx.fillStyle='#c8a84b';ctx.fillText('IRON VEIL',W/2,H/2-10);
+  ctx.shadowBlur=0;
+  ctx.strokeStyle='rgba(200,168,75,0.3)';ctx.lineWidth=1;
+  [[W/2-170,W/2-200],[W/2+170,W/2+200]].forEach(([a,b])=>{
+    ctx.beginPath();ctx.moveTo(a,H/2+28);ctx.lineTo(b,H/2+28);ctx.stroke();
+  });
+  const r=5;ctx.fillStyle='rgba(200,168,75,0.6)';
+  ctx.beginPath();ctx.moveTo(W/2,H/2+23);ctx.lineTo(W/2+r,H/2+28);ctx.lineTo(W/2,H/2+33);ctx.lineTo(W/2-r,H/2+28);ctx.closePath();ctx.fill();
+}
+
+function renderPlayerCanvas(){
+  const canvas=document.getElementById('playerCanvas');
+  const ctx=canvas.getContext('2d');const S=4;
+  ctx.clearRect(0,0,80,80);
+  if(!G||!G.player)return;
+  const ps=getPlayerStats();
+  const hpPct=G.player.hp/ps.maxHp;
+  const bodyColor=hpPct>0.5?'#6a90b0':hpPct>0.25?'#a07030':'#a03030';
+  const helmetColor=G.equipment.Helmet?(MAT[G.equipment.Helmet.material]?.color||'#8aa0b0'):'#405060';
+  const armorColor=G.equipment.Armor?(MAT[G.equipment.Armor.material]?.color||'#8aa0b0'):bodyColor;
+  const weapColor=G.equipment.Weapon?(MAT[G.equipment.Weapon.material]?.color||'#c8c8c8'):'#888888';
+  const pixels=['    xxxxxx    ','   x......x   ','   x.xx...x   ','   x.xx...x   ','   x......x   ','    xxxxxx    ','  xxxxHHxxxx  ',' x..xHHHHx..x ',' x..xHHHHx..x ',' x..xxxxxxxxx.','  xx.........x','  xx.........x','  xx.........x','   x.x....x.x ','   x.x....x.x ','   x.x    x.x ','   xxx    xxx ','   x..    ..x ','   x..    ..x ','   xxx    xxx '];
+  const ox=Math.floor((80-14*S)/2),oy=4;
+  pixels.forEach((row,y)=>{[...row].forEach((c,x)=>{
+    let color=null;
+    if(c==='x')color='#2a3040';
+    if(c==='.')color=armorColor;
+    if(c==='H')color=helmetColor;
+    if(color){ctx.fillStyle=color;ctx.fillRect(ox+x*S,oy+y*S,S,S);}
+  });});
+  if(G.equipment.Boots){
+    const bc=MAT[G.equipment.Boots.material]?.color||'#8aa0b0';
+    ctx.fillStyle=bc;ctx.fillRect(ox+3*S,oy+17*S,S*3,S*2);ctx.fillRect(ox+10*S,oy+17*S,S*3,S*2);
+  }
+  if(G.equipment.Amulet){
+    const ac=MAT[G.equipment.Amulet.material]?.color||'#c8a84b';
+    ctx.fillStyle=ac;ctx.fillRect(ox+6*S+2,oy+8*S,S,S);
+  }
+  if(G.equipment.Weapon){drawWeaponShape(ctx,ox+14*S+2,oy+6*S,S,G.equipment.Weapon.structure,weapColor);}
+}
+
+
+// Draw the equipped weapon with a structure-specific silhouette.
+// (bx,ty) = base x / top y of the weapon zone; S = pixel scale.
+function drawWeaponShape(ctx,bx,ty,S,structId,color){
+  const edge='#c8c8c8';
+  switch(structId){
+    case 'Dagger':
+      ctx.fillStyle=color;ctx.fillRect(bx,ty+4*S,S,4*S);
+      ctx.fillStyle=edge;ctx.fillRect(bx,ty+3*S,S,S);break;
+    case 'Spear':
+      ctx.fillStyle=color;ctx.fillRect(bx,ty-2*S,S,11*S);
+      ctx.fillStyle=edge;ctx.fillRect(bx,ty-3*S,S,S);break;
+    case 'Halberd':
+      ctx.fillStyle=color;ctx.fillRect(bx,ty-2*S,S,11*S);
+      ctx.fillRect(bx+S,ty-S,2*S,3*S);
+      ctx.fillStyle=edge;ctx.fillRect(bx,ty-3*S,S,S);break;
+    case 'Scythe':
+      ctx.fillStyle=color;ctx.fillRect(bx,ty-S,S,10*S);
+      ctx.fillRect(bx-3*S,ty-S,4*S,S);
+      ctx.fillStyle=edge;ctx.fillRect(bx-3*S,ty,S,S);break;
+    case 'Cleaver':
+    case 'Axe':
+      ctx.fillStyle=color;ctx.fillRect(bx,ty+S,S,7*S);
+      ctx.fillRect(bx+S,ty,2*S,3*S);
+      ctx.fillStyle=edge;ctx.fillRect(bx+S,ty,2*S,S);break;
+    case 'Mace':
+      ctx.fillStyle=color;ctx.fillRect(bx,ty+2*S,S,6*S);
+      ctx.fillRect(bx-S,ty,3*S,2*S);
+      ctx.fillStyle=edge;ctx.fillRect(bx,ty-S,S,S);break;
+    case 'Flail':
+      ctx.fillStyle=color;ctx.fillRect(bx,ty+3*S,S,5*S);
+      ctx.fillRect(bx+S,ty+2*S,S,S);ctx.fillRect(bx+2*S,ty+S,S,S);
+      ctx.fillRect(bx+2*S,ty-S,2*S,2*S);break;
+    default: // Sword & fallback
+      ctx.fillStyle=color;ctx.fillRect(bx,ty,S,8*S);
+      ctx.fillStyle=edge;ctx.fillRect(bx-S,ty+2*S,3*S,S);break;
+  }
+}
+
+let combatAnim={frame:0,shake:0,shakeTarget:''};
+const FACTION_AMBIENT={
+  ashborn:    {color:'rgba(224,96,48,',   vy:-0.35,drift:0.15}, // rising embers
+  verdant:    {color:'rgba(112,192,64,',  vy:-0.10,drift:0.30}, // drifting spores
+  bonecult:   {color:'rgba(200,192,160,', vy: 0.12,drift:0.10}, // falling dust
+  manufactury:{color:'rgba(138,208,224,', vy:-0.18,drift:0.05}, // arcane motes
+  voidchoir:  {color:'rgba(154,96,200,',  vy:-0.06,drift:0.25}, // abyssal haze
+};
+function renderCombatCanvas(){
+  const canvas=document.getElementById('combatCanvas');if(!canvas)return;
+  const W=canvas.parentElement.clientWidth||600,H=260;
+  fxStep();
+  canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#090c10';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#0c1018';ctx.fillRect(0,0,W,H-55);
+  ctx.fillStyle='#141c24';
+  for(let bx=0;bx<W;bx+=30)for(let by=20;by<H-55;by+=20)ctx.fillRect(bx+(by%40===0?15:0),by,28,18);
+  ctx.fillStyle='#0f1418';
+  for(let tx=0;tx<W;tx+=40)for(let ty=H-60;ty<H;ty+=20)ctx.fillRect(tx+(ty%40===0?0:20),ty,38,18);
+  // depth: the ceiling swallows the light
+  const depth=ctx.createLinearGradient(0,0,0,H*0.55);
+  depth.addColorStop(0,'rgba(0,0,0,0.55)');depth.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=depth;ctx.fillRect(0,0,W,H*0.55);
+  // faction mood: ambient wash + particles
+  const amb=FACTION_AMBIENT[(G.enemy&&G.enemy.faction)||(G.factions&&G.factions.dominant.id)]||null;
+  if(amb){
+    ctx.fillStyle=amb.color+'0.04)';ctx.fillRect(0,0,W,H);
+    FX.ambient=FX.ambient||[];
+    if(FX.ambient.length<36&&Math.random()<0.5)
+      FX.ambient.push({x:Math.random()*W,y:amb.vy<0?H-60+Math.random()*40:Math.random()*40,life:1});
+    FX.ambient.forEach(p=>{p.y+=amb.vy;p.x+=Math.sin(p.y*0.05+p.life*7)*amb.drift;p.life-=0.004;});
+    FX.ambient=FX.ambient.filter(p=>p.life>0&&p.y>-5&&p.y<H+5);
+    FX.ambient.forEach(p=>{ctx.fillStyle=amb.color+(0.25*p.life).toFixed(3)+')';ctx.fillRect(p.x,p.y,2,2);});
+  }
+  // ground shadows anchor the sprites
+  ctx.fillStyle='rgba(0,0,0,0.45)';
+  ctx.beginPath();ctx.ellipse(110,H-42,34,7,0,0,Math.PI*2);ctx.fill();
+  if(G.enemy&&!G.enemy.dying){ctx.beginPath();ctx.ellipse(W-85,H-42,G.enemy.isBoss?44:30,7,0,0,Math.PI*2);ctx.fill();}
+  // soft halos
+  const halo=(x,y,r,col)=>{const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,col);g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2);};
+  halo(110,H-80,50,'rgba(106,144,176,0.07)');
+  if(G.enemy&&!G.enemy.dying){
+    const fc=G.enemy.isBoss?'rgba(200,168,75,0.10)':(amb?amb.color+'0.07)':'rgba(120,120,140,0.06)');
+    halo(W-85,H-78,G.enemy.isBoss?66:52,fc);
+    if(G.enemy.isBoss){ // slow golden pulse behind the boss
+      const pulse=0.5+0.5*Math.sin(combatAnim.frame*0.05);
+      ctx.globalAlpha=0.10+0.08*pulse;
+      ctx.strokeStyle='#c8a84b';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(W-85,H-78,40+pulse*8,0,Math.PI*2);ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+  }
+  drawTorch(ctx,60,H-70);drawTorch(ctx,W-60,H-70);
+  let pShX=combatAnim.shakeTarget==='player'?Math.sin(combatAnim.frame*0.8)*combatAnim.shake:0;
+  let eShX=combatAnim.shakeTarget==='enemy'?Math.sin(combatAnim.frame*0.8)*combatAnim.shake:0;
+  if(FX.dodgeAnim){
+    const off=Math.sin(FX.dodgeAnim.life*Math.PI)*16;
+    if(FX.dodgeAnim.target==='player')pShX-=off;else eShX+=off;
+  }
+  // Attack lunges: the attacker leans into the blow
+  let pLx=0,pLy=0,eLx=0,eLy=0;
+  if(FX.lunge){
+    const t=Math.sin((1-FX.lunge.life)*Math.PI); // out and back
+    if(FX.lunge.kind==='stomp'){
+      if(FX.lunge.who==='player')pLy=-t*FX.lunge.dist*0.5;else eLy=-t*FX.lunge.dist*0.5;
+    }else{
+      if(FX.lunge.who==='player')pLx=t*FX.lunge.dist;else eLx=-t*FX.lunge.dist;
+    }
+  }
+  // Breathing: subtle rise/fall, quickened by low HP (stress)
+  const psB=getPlayerStats();
+  const pStress=G.player.hp/psB.maxHp<0.3;
+  const pBr=Math.sin(combatAnim.frame*(pStress?0.16:0.055))*1.3;
+  let eBr=0;
+  if(G.enemy&&!G.enemy.dying){
+    const eStress=G.enemy.hp/G.enemy.maxHp<0.3;
+    eBr=Math.sin(combatAnim.frame*(eStress?0.16:0.05)+2)*1.3;
+  }
+  drawCombatPlayer(ctx,80+pShX+pLx,H-110+pBr+pLy);
+  if(G.enemy)drawCombatEnemy(ctx,W-100+eShX+eLx,H-100+eBr+eLy);
+  // Low-HP vignette: the edges close in
+  if(G.combat.active&&G.player.hp/psB.maxHp<0.25&&G.player.hp>0){
+    const pulse=0.5+0.5*Math.sin(combatAnim.frame*0.16);
+    const vg=ctx.createRadialGradient(W/2,H/2,H*0.35,W/2,H/2,W*0.7);
+    vg.addColorStop(0,'rgba(0,0,0,0)');
+    vg.addColorStop(1,`rgba(160,20,20,${0.10+0.10*pulse})`);
+    ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
+  }
+  if(Math.random()<0.3){ctx.fillStyle='rgba(200,168,75,0.15)';ctx.fillRect(Math.random()*W,H-80-Math.random()*60,2,2);}
+  fxDraw(ctx,W,H);
+}
+function drawTorch(ctx,x,y){
+  ctx.fillStyle='#5a3010';ctx.fillRect(x-3,y,6,14);
+  const fh=8+Math.sin(combatAnim.frame*0.3+x)*2+Math.random()*2;
+  ctx.fillStyle='#c87040';ctx.fillRect(x-4,y-fh,8,fh+2);
+  ctx.fillStyle='#e0a040';ctx.fillRect(x-2,y-fh+2,4,fh-3);
+  const fl=Math.random()*0.3+0.7;
+  const g=ctx.createRadialGradient(x,y-8,0,x,y-8,40);
+  g.addColorStop(0,`rgba(200,120,40,${0.3*fl})`);g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.fillRect(x-40,y-48,80,60);
+}
+function drawCombatPlayer(ctx,x,y){
+  if(!G||!G.player)return;
+  const S=5,ps=getPlayerStats(),hpPct=G.player.hp/ps.maxHp;
+  const bodyC=hpPct>0.5?'#6a90b0':hpPct>0.25?'#a07030':'#a03030';
+  const helmC=G.equipment.Helmet?MAT[G.equipment.Helmet.material]?.color:'#405060';
+  const armC=G.equipment.Armor?MAT[G.equipment.Armor.material]?.color:bodyC;
+  const weapC=G.equipment.Weapon?MAT[G.equipment.Weapon.material]?.color:'#888';
+  ctx.fillStyle='#2a3040';ctx.fillRect(x+3*S,y,S*6,S*12);
+  ctx.fillStyle=helmC||'#405060';ctx.fillRect(x+3*S,y,S*6,S*4);
+  ctx.fillStyle=armC;ctx.fillRect(x+2*S,y+4*S,S*8,S*6);
+  ctx.fillStyle=bodyC;ctx.fillRect(x+3*S,y+10*S,S*2,S*4);ctx.fillRect(x+7*S,y+10*S,S*2,S*4);
+  if(G.equipment.Boots){
+    const bc=MAT[G.equipment.Boots.material]?.color||'#8aa0b0';
+    ctx.fillStyle=bc;ctx.fillRect(x+3*S,y+13*S,S*2,S);ctx.fillRect(x+7*S,y+13*S,S*2,S);
+  }
+  if(G.equipment.Amulet){
+    const ac=MAT[G.equipment.Amulet.material]?.color||'#c8a84b';
+    ctx.fillStyle=ac;ctx.fillRect(x+5*S+1,y+5*S,S-1,S-1);
+    ctx.fillStyle='#e8e8f0';ctx.fillRect(x+5*S+1,y+5*S,1.5,1.5);
+  }
+  if(G.equipment.Weapon){drawWeaponShape(ctx,x+10*S,y+2*S,S,G.equipment.Weapon.structure,weapC);}
+  ctx.fillStyle='#e0e8f0';ctx.fillRect(x+4*S,y+S,S,S);ctx.fillRect(x+7*S,y+S,S,S);
+}
+
+// One visible item per slot from the pre-generated spoils — a promise, not a stat.
+function spoilsWorn(e){
+  if(!e||!e.spoils)return[];
+  const seen={},out=[];
+  e.spoils.forEach(it=>{if(!seen[it.slot]){seen[it.slot]=1;out.push(it);}});
+  return out;
+}
+
+function drawCombatEnemy(ctx,x,y){
+  if(!G.enemy)return;
+  const S=5,hpPct=G.enemy.hp/G.enemy.maxHp;
+  const T={undead:{body:'#4a5a50',eye:'#a0e0a0',accent:'#80c080'},demon:{body:'#703030',eye:'#e04040',accent:'#c06030'},golem:{body:'#606870',eye:'#80a0c0',accent:'#9aa8b0'},spirit:{body:'#505870',eye:'#c0d0f0',accent:'#9090d0'},beast:{body:'#6a5030',eye:'#e0a040',accent:'#b08050'},fungal:{body:'#4a6030',eye:'#c0e040',accent:'#80a040'},construct:{body:'#505060',eye:'#60c0e0',accent:'#7080a0'},abyssal:{body:'#301840',eye:'#c060e0',accent:'#6030a0'}};
+  let t=T[G.enemy.type]||T.undead;
+  if(G.enemy.shifted)t={...t,accent:'#8aaadc',body:'#4a5a70'};
+  let alpha=hpPct<0.2?0.5+0.5*Math.sin(Date.now()/150):1;
+  if(FX.lunge&&FX.lunge.who==='enemy'){
+    if(FX.lunge.kind==='fade')alpha*=0.35+0.65*Math.abs(FX.lunge.life-0.5)*2;
+    if(FX.lunge.kind==='warp')alpha*=(combatAnim.frame%4<2)?0.5:1;
+  }
+  let sink=0;
+  if(G.enemy.dying){
+    const t=Math.min(1,(Date.now()-G.enemy.dying)/600);
+    alpha=Math.max(0,1-t);sink=t*10;
+  }
+  y+=sink;
+  ctx.globalAlpha=alpha;
+  if(G.enemy.isBoss){
+    ctx.fillStyle='#1a1a20';ctx.fillRect(x-5*S,y-3*S,S*14,S*16);
+    ctx.fillStyle=t.body;ctx.fillRect(x-4*S,y-2*S,S*12,S*14);
+    ctx.fillStyle=t.accent;ctx.fillRect(x-4*S,y-2*S,S*12,S*4);
+    ctx.fillRect(x-5*S,y+2*S,S*2,S*6);ctx.fillRect(x+7*S,y+2*S,S*2,S*6);
+    ctx.fillStyle=t.eye;ctx.fillRect(x,y+S,S*2,S*2);ctx.fillRect(x+6*S,y+S,S*2,S*2);
+    ctx.fillStyle='#c8a84b';ctx.fillRect(x,y-4*S,S*2,S*3);ctx.fillRect(x+4*S,y-5*S,S*2,S*4);ctx.fillRect(x+8*S,y-4*S,S*2,S*3);
+  }else{
+    ctx.fillStyle='#1a1a20';ctx.fillRect(x-2*S,y,S*8,S*12);
+    ctx.fillStyle=t.body;ctx.fillRect(x-S,y+S,S*6,S*10);
+    ctx.fillStyle=t.accent;ctx.fillRect(x-S,y+S,S*6,S*3);
+    ctx.fillStyle=t.eye;ctx.fillRect(x+S,y+2*S,S,S);ctx.fillRect(x+3*S,y+2*S,S,S);
+    ctx.fillStyle=t.body;ctx.fillRect(x-2*S,y+4*S,S*2,S*5);ctx.fillRect(x+5*S,y+4*S,S*2,S*5);
+  }
+  // ─ The foe carries what it will drop ─
+  if(!G.enemy.dying){
+    const boss=G.enemy.isBoss;
+    const worn=spoilsWorn(G.enemy);
+    const anchors={ // [relX, relY] per slot, normal vs boss
+      Weapon:boss?[-6*S,0]:[-3*S,2*S],
+      Armor: boss?[-4*S,5*S,12*S,2*S]:[-S,5*S,6*S,2*S],
+      Helmet:boss?[-4*S,-S,12*S,S]:[-S,S,6*S,S],
+      Boots: boss?[-2*S,11*S,4*S,S]:[0,10*S,5*S,S],
+      Amulet:boss?[2*S,3*S,2*S,2*S]:[2*S,4*S,S,S],
+    };
+    worn.forEach(it=>{
+      const mc=MAT[it.material]?.color||'#8aa0b0';
+      const a=anchors[it.slot];if(!a)return;
+      ctx.globalAlpha=alpha*0.95;
+      if(it.slot==='Weapon'){
+        drawWeaponShape(ctx,x+a[0],y+a[1],boss?S:S-1,it.structure,mc);
+      }else{
+        ctx.fillStyle=mc;ctx.fillRect(x+a[0],y+a[1],a[2],a[3]);
+        if(it.slot==='Amulet'){ctx.fillStyle='#e8e8f0';ctx.fillRect(x+a[0],y+a[1],1.5,1.5);}
+      }
+      // rarity glint: precious things catch the torchlight
+      const gc=GLINT_CHANCE[it.rarity]||0;
+      if(gc&&Math.random()<gc){
+        const r=RARITIES.find(rr=>rr.id===it.rarity);
+        fxGlint(x+a[0]+Math.random()*(a[2]||3*S),y+a[1]+Math.random()*(a[3]||4*S),r.color);
+      }
+    });
+  }
+  ctx.globalAlpha=1;
+}
+// V2 fix: only one RAF loop ever, even across multiple runs
+let animStarted=false;
+function animateCombat(){
+  if(animStarted)return;
+  animStarted=true;
+  (function loop(){
+    combatAnim.frame++;
+    if(combatAnim.shake>0)combatAnim.shake*=0.85;
+    if(document.getElementById('screen-game').classList.contains('active'))renderCombatCanvas();
+    requestAnimationFrame(loop);
+  })();
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// BUILD HELP OVERLAY (V2.1)
+// ═══════════════════════════════════════════════════════════════
+const TAG_HELP={
+  bleed:'Stacking damage over time. Hemorrhage grows it, Blood Explosion carries it to the next foe.',
+  crit:'Critical strikes and burst damage. Executioner finishes weakened enemies.',
+  poison:'Poison ticks that corrode armor over time (Corrosion) and spread (Toxic Bloom).',
+  defense:'Damage reduction, wards and retaliation. Fortress trades speed for resilience.',
+  mobility:'Dodge, speed and counters. Momentum empowers your next strike after a dodge.',
+  burn:'Fire damage over time. Pairs with crit builds for burst pressure.',
+  drain:'Lifesteal and sustain. Blood Feast heals when enemies bleed.',
+  economy:'Shards, durability and forge efficiency. Fuels long runs.',
+};
+function showBuildHelp(){
+  const body=document.getElementById('buildHelpBody');
+  let html=`<div class="build-expl">Every attribute on your gear carries one or more <b style="color:var(--gold)">tags</b>. Wearing <b>2+ attributes of the same tag</b> shapes a build: the Build panel highlights your direction, and faction loot starts favoring matching attributes — leaning into a build makes it stronger over the run.</div>`;
+  Object.entries(TAGS).forEach(([id,t])=>{
+    html+=`<div class="build-tag-row">
+      <span class="build-chip" style="color:${t.color};border-color:${t.color}66;">${t.name}</span>
+      <span class="build-tag-desc">${TAG_HELP[id]||''}</span>
+    </div>`;
+  });
+  body.innerHTML=html;
+  document.getElementById('build-overlay').classList.add('active');
+}
+function closeBuildHelp(){document.getElementById('build-overlay').classList.remove('active');}
+
+// ═══════════════════════════════════════════════════════════════
+// COMBAT FX (V2.1) — particles, floating numbers, flashes
+// ═══════════════════════════════════════════════════════════════
+const FX={particles:[],floaters:[],flashes:[]};
+const STATUS_FX_COLOR={poison:'#70c040',burn:'#e06030',bleed:'#c84060'};
+
+// Single source of truth for sprite anchors — shared by sprites, floaters, particles, flashes.
+// drawCombatPlayer(80,H-110) with S=5: body spans x 80..80+60, center ~110; head top ~H-110.
+// drawCombatEnemy(W-100,H-100): normal spans W-110..W-60 (center W-85); boss is wider and taller.
+function fxPos(target,W,H){
+  W=W||600;H=H||260;
+  if(target==='enemy'){
+    const boss=G.enemy&&G.enemy.isBoss;
+    return boss?{x:W-90,y:H-118}:{x:W-85,y:H-104};
+  }
+  return{x:110,y:H-114};
+}
+// size: 'big' (crit/lethal/revive), 'normal', 'tick' (DoT — smaller, dimmer)
+function fxDamage(target,text,color,size=false){
+  if(size===true)size='big';
+  if(!size)size='normal';
+  // Stack simultaneous floaters on the same target so they don't overlap
+  const stack=FX.floaters.filter(f=>f.target===target&&f.life>0.55).length;
+  FX.floaters.push({target,text:String(text),color,life:1,size,dx:(Math.random()-0.5)*14,stack});
+}
+function fxBurst(target,color,n=10,spread=2.6){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2,v=1+Math.random()*spread;
+    FX.particles.push({target,ox:(Math.random()-0.5)*24,oy:(Math.random()-0.5)*24,
+      vx:Math.cos(a)*v,vy:Math.sin(a)*v-1.2,life:1,color,size:2+Math.random()*2});
+  }
+}
+// Directional burst: dirY<0 rises (poison smoke), dirY>0 falls (bleed drops)
+function fxBurstDir(target,color,n,dirY,spread=1.2){
+  for(let i=0;i<n;i++){
+    FX.particles.push({target,ox:(Math.random()-0.5)*26,oy:(Math.random()-0.5)*14,
+      vx:(Math.random()-0.5)*spread,vy:dirY*(0.6+Math.random()*1.2),grav:dirY>0?0.1:-0.02,
+      life:1,color,size:2+Math.random()*1.5});
+  }
+}
+// Traveling particles between the two combatants (drain, vampiric, blood feast)
+function fxBeam(fromT,toT,color,n=7){
+  for(let i=0;i<n;i++){
+    FX.beams=FX.beams||[];
+    FX.beams.push({fromT,toT,t:-i*0.08,color,wob:(Math.random()-0.5)*18});
+  }
+}
+// Expanding ring (guard, wards, boss powers). slow=true for heals.
+function fxRing(target,color,slow=false){
+  FX.rings=FX.rings||[];
+  FX.rings.push({target,color,r:12,life:1,grow:slow?0.9:2.2,fade:slow?0.02:0.05});
+}
+// Sprite lateral dodge nudge
+function fxDodge(target){FX.dodgeAnim={target,life:1};}
+// Quick slash arcs across a sprite (crit, demon claws, burning slash...)
+function fxSlash(target,color,n=3){
+  FX.slashes=FX.slashes||[];
+  for(let i=0;i<n;i++)FX.slashes.push({target,color,life:1,ang:-0.5+Math.random()*1,off:(i-1)*9});
+}
+// Attack lunge: the attacker leans into the blow. kind: 'lunge'|'stomp'|'fade'|'warp'
+function fxLunge(who,dist=24,speed=0.09,kind='lunge'){
+  FX.lunge={who,life:1,dist,speed,kind};
+}
+// Large fading banner across the combat canvas (boss intros)
+function fxBanner(text,sub){FX.banner={text,sub,life:1};}
+// Tiny sparkle at an absolute canvas position (worn-loot rarity glints)
+function fxGlint(x,y,color){
+  FX.glints=FX.glints||[];
+  FX.glints.push({x,y,life:1,color,vy:-0.35-Math.random()*0.3});
+}
+const GLINT_CHANCE={common:0,uncommon:0.005,rare:0.012,epic:0.022,legendary:0.04};
+function fxFlash(target,color='rgba(255,255,255,0.35)'){
+  FX.flashes.push({target,color,life:1});
+}
+function fxStep(){
+  if(FX.freeze>0){FX.freeze--;return;} // crit hitstop: world holds its breath
+  FX.floaters.forEach(f=>{f.life-=0.016;});
+  FX.floaters=FX.floaters.filter(f=>f.life>0);
+  FX.particles.forEach(p=>{p.ox+=p.vx;p.oy+=p.vy;p.vy+=(p.grav!==undefined?p.grav:0.12);p.life-=0.025;});
+  FX.particles=FX.particles.filter(p=>p.life>0);
+  FX.flashes.forEach(fl=>{fl.life-=0.12;});
+  FX.flashes=FX.flashes.filter(fl=>fl.life>0);
+  (FX.beams||[]).forEach(b=>{b.t+=0.045;});
+  FX.beams=(FX.beams||[]).filter(b=>b.t<1);
+  (FX.rings||[]).forEach(r=>{r.r+=r.grow;r.life-=r.fade;});
+  FX.rings=(FX.rings||[]).filter(r=>r.life>0);
+  if(FX.dodgeAnim){FX.dodgeAnim.life-=0.07;if(FX.dodgeAnim.life<=0)FX.dodgeAnim=null;}
+  (FX.slashes||[]).forEach(s=>{s.life-=0.09;});
+  FX.slashes=(FX.slashes||[]).filter(s=>s.life>0);
+  if(FX.lunge){FX.lunge.life-=FX.lunge.speed;if(FX.lunge.life<=0)FX.lunge=null;}
+  if(FX.banner){FX.banner.life-=0.008;if(FX.banner.life<=0)FX.banner=null;}
+  (FX.glints||[]).forEach(g=>{g.y+=g.vy;g.life-=0.03;});
+  FX.glints=(FX.glints||[]).filter(g=>g.life>0);
+}
+function fxDraw(ctx,W,H){
+  // flashes over sprites
+  FX.flashes.forEach(fl=>{
+    const p=fxPos(fl.target,W,H);
+    const boss=fl.target==='enemy'&&G.enemy&&G.enemy.isBoss;
+    ctx.globalAlpha=fl.life*0.6;
+    ctx.fillStyle=fl.color;
+    ctx.fillRect(p.x-(boss?48:38),p.y+(boss?6:10),boss?96:76,boss?92:72);
+    ctx.globalAlpha=1;
+  });
+  // particles
+  FX.particles.forEach(pt=>{
+    const p=fxPos(pt.target,W,H);
+    ctx.globalAlpha=Math.max(0,pt.life);
+    ctx.fillStyle=pt.color;
+    ctx.fillRect(p.x+pt.ox,p.y+pt.oy,pt.size,pt.size);
+    ctx.globalAlpha=1;
+  });
+  // rings (guard / wards / boss powers)
+  (FX.rings||[]).forEach(r=>{
+    const p=fxPos(r.target,W,H);
+    ctx.globalAlpha=r.life*0.8;
+    ctx.strokeStyle=r.color;ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(p.x,p.y+22,r.r,0,Math.PI*2);ctx.stroke();
+    ctx.globalAlpha=1;
+  });
+  // beams (life transfer)
+  (FX.beams||[]).forEach(b=>{
+    if(b.t<0)return;
+    const p1=fxPos(b.fromT,W,H),p2=fxPos(b.toT,W,H);
+    const x=p1.x+(p2.x-p1.x)*b.t, y=p1.y+22+(p2.y-p1.y)*b.t+Math.sin(b.t*Math.PI)*b.wob;
+    ctx.globalAlpha=0.9*(1-Math.abs(b.t-0.5)*0.6);
+    ctx.fillStyle=b.color;
+    ctx.fillRect(x-1.5,y-1.5,3,3);
+    ctx.globalAlpha=1;
+  });
+  // worn-loot glints (absolute positions)
+  (FX.glints||[]).forEach(g=>{
+    ctx.globalAlpha=g.life;
+    ctx.fillStyle=g.color;
+    ctx.fillRect(g.x,g.y,2,2);
+    if(g.life>0.6){ctx.fillRect(g.x-2,g.y+1,1,1);ctx.fillRect(g.x+3,g.y+1,1,1);}
+    ctx.globalAlpha=1;
+  });
+  // slash arcs
+  (FX.slashes||[]).forEach(s=>{
+    const p=fxPos(s.target,W,H);
+    const l=28*s.life+10;
+    ctx.globalAlpha=s.life;
+    ctx.strokeStyle=s.color;ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(p.x-l*Math.cos(s.ang)+s.off,p.y+22-l*Math.sin(s.ang));
+    ctx.lineTo(p.x+l*Math.cos(s.ang)+s.off,p.y+22+l*Math.sin(s.ang));
+    ctx.stroke();
+    ctx.globalAlpha=1;
+  });
+  // boss banner
+  if(FX.banner){
+    const a=FX.banner.life>0.85?(1-FX.banner.life)/0.15:Math.min(1,FX.banner.life/0.3);
+    ctx.globalAlpha=a*0.9;
+    ctx.font='24px "Cinzel", serif';ctx.textAlign='center';
+    ctx.shadowColor='#c8a84b';ctx.shadowBlur=18;
+    ctx.fillStyle='#c8a84b';
+    ctx.fillText(FX.banner.text,W/2,H*0.32);
+    if(FX.banner.sub){
+      ctx.font='11px "Share Tech Mono", monospace';ctx.shadowBlur=6;
+      ctx.fillStyle='#a08840';
+      ctx.fillText(FX.banner.sub,W/2,H*0.32+20);
+    }
+    ctx.shadowBlur=0;ctx.globalAlpha=1;
+  }
+  // floating numbers (stacked so simultaneous hits stay readable)
+  FX.floaters.forEach(f=>{
+    const p=fxPos(f.target,W,H);
+    const rise=(1-f.life)*46;
+    const tick=f.size==='tick',big=f.size==='big';
+    ctx.globalAlpha=Math.min(1,f.life*1.6)*(tick?0.65:1);
+    ctx.font=(big?'bold 22px':tick?'11px':'bold 15px')+' "Share Tech Mono", monospace';
+    ctx.textAlign='center';
+    ctx.shadowColor=f.color;ctx.shadowBlur=big?12:tick?2:6;
+    ctx.fillStyle=f.color;
+    ctx.fillText(f.text,p.x+f.dx,p.y-14-rise-(f.stack||0)*13);
+    ctx.shadowBlur=0;ctx.globalAlpha=1;
+  });
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// STRUCTURE PIXEL ICONS (V2.3) — 16x16 rect grids, material-tinted
+// ═══════════════════════════════════════════════════════════════
+const ICON_PIX={
+  // Weapons
+  Dagger:[[7,4,2,5],[6,9,4,1],[7,10,2,3]],
+  Sword:[[7,1,2,9],[5,10,6,1],[7,11,2,4]],
+  Cleaver:[[5,2,6,7],[4,2,1,7],[7,9,2,6]],
+  Axe:[[8,2,4,4],[7,3,1,2],[8,6,2,9]],
+  Mace:[[6,2,4,4],[5,3,6,2],[7,6,2,9]],
+  Spear:[[7,1,2,2],[7.5,3,1,12]],
+  Flail:[[7,8,2,7],[7,6,1,1],[8,5,1,1],[9,3,3,3]],
+  Scythe:[[5,2,8,2],[11,4,2,2],[6,4,2,11]],
+  Halberd:[[7,1,2,3],[9,2,3,4],[7,4,2,11]],
+  // Armor
+  Plate:[[4,3,8,9],[3,4,1,4],[12,4,1,4],[6,12,4,2]],
+  Shroud:[[6,2,4,2],[5,4,6,8],[4,12,8,2]],
+  Mantle:[[5,2,6,2],[4,4,8,9],[6,13,4,1]],
+  Carapace:[[4,3,8,2],[4,6,8,2],[4,9,8,2],[5,12,6,2]],
+  Vest:[[5,3,6,9],[4,4,1,3],[11,4,1,3]],
+  // Helmets
+  Helm:[[4,4,8,7],[5,8,6,1.2],[4,3,8,1]],
+  Cowl:[[5,3,6,3],[4,5,8,7],[6,8,4,3]],
+  Mask:[[5,4,6,8],[6,6,1,1],[9,6,1,1],[7,9,2,1]],
+  Crown:[[4,8,8,4],[4,4,2,4],[7,3,2,5],[10,4,2,4]],
+  Visage:[[5,3,6,9],[6,6,1,2],[9,6,1,2]],
+  // Boots
+  Greaves:[[6,2,3,9],[6,11,6,3]],
+  Treads:[[6,5,3,6],[5,11,8,3]],
+  Walkers:[[6,4,3,7],[6,11,6,3]],
+  Shackles:[[6,3,3,8],[5,6,5,2],[6,11,6,3]],
+  Stirrups:[[6,3,3,8],[6,11,6,3],[11,12,2,2]],
+  // Amulets
+  Pendant:[[7,2,2,1],[6,3,1,3],[9,3,1,3],[6,7,4,5]],
+  Talisman:[[7,4,2,2],[5,6,6,4],[7,10,2,2]],
+  Sigil:[[5,4,6,6],[7,6,2,2],[5,11,6,1]],
+  Eye:[[4,6,8,4],[7,7,2,2]],
+  Charm:[[7,3,2,2],[5,6,6,6],[7,8,2,2]],
+};
+function structIconSvg(item,size=20,fillOverride=null){
+  const st=structOf(item);if(!st||!ICON_PIX[st.id])return'';
+  const fill=fillOverride||(MAT[item.material]?.color||'#8aa0b0');
+  const rects=ICON_PIX[st.id].map(([x,y,w,h])=>`<rect x="${x}" y="${y}" width="${w}" height="${h}"/>`).join('');
+  return`<svg class="struct-icon" width="${size}" height="${size}" viewBox="0 0 16 16" fill="${fill}" style="image-rendering:pixelated;">${rects}</svg>`;
+}
+
+// ─── SCREENS ─────────────────────────────────────────────────
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');}
+
+function startGame(){
+  initState();
+  showScreen('game');
+  clearLog();
+  updateUI();
+  renderPlayerCanvas();
+  animateCombat();
+  showRelicChoice(); // chooseRelic() launches startFloor()
+}
+
+window.addEventListener('load',()=>{
+  renderTitleCanvas();
+  (function tl(){renderTitleCanvas();requestAnimationFrame(tl);})();
+});
+window.addEventListener('resize',()=>{if(document.getElementById('screen-game').classList.contains('active'))renderCombatCanvas();});
+
+// Minimal debug hook
+window.__iv={get G(){return G;},generateItem,generateBoss,spawnEnemy};
+
+</script>
+</body>
+</html>
